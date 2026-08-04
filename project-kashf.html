@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف (Kashf) — Final Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B1E3A; --navy-2:#14315E; --royal:#1D4ED8; --blue:#2563EB; --blue-light:#93C5FD;
+  --ice:#EFF6FF; --ice-2:#DBEAFE; --gold:#FBBF24;
+  --text:#1F2937; --muted:#6B7280; --muted-2:#9CA3AF; --border:#E1E7F5;
+  --surface:#fff; --sunk:#F6F9FF;
+  --grad:linear-gradient(150deg,var(--navy) 0%,var(--navy-2) 45%,var(--royal) 130%);
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --shadow:0 1px 2px rgba(11,30,58,.06),0 8px 24px -12px rgba(11,30,58,.18);
+  --font:'Poppins','Liberation Sans',Arial,sans-serif;
+  --font-ar:'IBM Plex Sans Arabic','Poppins',sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);font-weight:300;color:var(--text);background:var(--sunk);line-height:1.6}
+h1,h2,h3,h4{font-family:var(--font);font-weight:700;margin:0;letter-spacing:-.01em}
+.ar{font-family:var(--font-ar);direction:rtl;unicode-bidi:isolate}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+
+/* hero */
+.hero{background:var(--grad);background-color:var(--navy);color:#fff;position:relative;overflow:hidden;padding:44px 0 40px}
+.hero::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:42px 42px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 90%)}
+.hero::after{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.5),transparent 70%)}
+.hero .wrap{position:relative;z-index:1}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--blue-light)}
+.hero h1{font-size:clamp(30px,4.6vw,46px);line-height:1.05;margin:14px 0 4px}
+.hero .name-ar{font-family:var(--font-ar);font-size:clamp(26px,4vw,38px);font-weight:700;color:#fff;display:block;margin-bottom:2px}
+.hero .tag{font-size:17px;font-weight:400;color:rgba(255,255,255,.82);margin-top:10px;max-width:660px}
+.hero .tag-ar{font-family:var(--font-ar);direction:rtl;display:inline-block;text-align:right;font-size:18px;color:#BFDBFE;margin-top:6px}
+.byline{display:flex;align-items:center;gap:12px;margin-top:24px;flex-wrap:wrap}
+.avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+.byline .who{font-size:14px;font-weight:500;color:#fff}
+.byline .role{font-size:12px;color:rgba(255,255,255,.6)}
+
+/* section */
+.sec{padding:38px 0}
+.sec-head{margin-bottom:16px}
+.sec-head h2{font-size:20px;color:var(--navy)}
+.sec-head p{font-size:13.5px;color:var(--muted);margin:4px 0 0}
+
+/* demo embed */
+.demo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.demo-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--sunk);flex-wrap:wrap}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#E5E7EB;display:block}
+.dots i:nth-child(1){background:#FCA5A5}.dots i:nth-child(2){background:#FCD34D}.dots i:nth-child(3){background:#86EFAC}
+.url{flex:1;min-width:160px;text-align:center;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:5px 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:12.5px;font-weight:500;padding:7px 14px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:.15s}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:var(--royal)}
+.btn-g{border-color:var(--border);color:var(--text);background:#fff}.btn-g:hover{border-color:var(--blue);color:var(--blue)}
+.frame{position:relative;width:100%;height:640px;background:#0B1220}
+.frame iframe{width:100%;height:100%;border:0;display:block}
+@media(max-width:700px){.frame{height:520px}}
+.demo-note{font-size:12px;color:var(--muted-2);padding:10px 16px;border-top:1px solid var(--border);background:var(--sunk)}
+
+/* fields */
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:22px}
+@media(max-width:840px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px 24px}
+.field+.field{margin-top:18px}
+.f-label{font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:5px}
+.f-val{font-size:14px;color:var(--text)}
+.stat{font-family:var(--font);font-size:21px;font-weight:700;color:var(--blue);line-height:1.3}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.pill{font-size:12px;font-weight:500;background:var(--ice);color:var(--royal);border:1px solid var(--ice-2);border-radius:999px;padding:4px 11px}
+.pill.ar{font-family:var(--font-ar)}
+
+/* mechanism */
+.mech{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+@media(max-width:840px){.mech{grid-template-columns:1fr}}
+.mech-box{border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;background:var(--surface)}
+.mech-box h4{font-size:14px;color:var(--navy);margin-bottom:3px}
+.mech-box .sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.mech-list{display:flex;flex-direction:column;gap:7px}
+.mech-item{display:flex;align-items:flex-start;gap:9px;font-size:13px}
+.mech-item .n{width:19px;height:19px;border-radius:6px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px}
+.mech-item .n.blk{background:#B91C1C}
+.mech-item .n.lock{background:var(--navy)}
+.mech-item .ar{font-family:var(--font-ar);font-weight:500}
+.mech-item .en{color:var(--muted);font-size:12px}
+
+/* callout */
+.callout{background:linear-gradient(135deg,var(--ice),#fff);border-left:3px solid var(--blue);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:15px 18px;font-size:13.5px;color:var(--navy);margin-top:16px}
+.callout b{color:var(--blue)}
+.quote{background:var(--navy);color:#fff;border-radius:var(--r-md);padding:20px 24px;margin-top:16px}
+.quote .q-en{font-size:17px;font-weight:500;line-height:1.5}
+.quote .q-sub{font-size:13px;color:var(--blue-light);margin-top:8px}
+
+/* confirm chip */
+.todo{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:6px}
+.todo-val{color:#92400E;font-style:italic}
+
+footer{padding:28px 0 44px;font-size:12px;color:var(--muted-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+</style>
+<script type="application/json" id="meska-project-meta">
+{
+  "name": "Kashf (كشف)",
+  "tagline": "Guided family compatibility before any introduction — two sealed stages, one shared summary, and contact details only at the end.",
+  "participant": "Ahmed Atef",
+  "problem": "In Gulf family-led marriage introductions, the questions that actually decide the outcome — daily religious practice, where the couple will live, whether the bride keeps her career, when children come, how money is arranged — are the ones nobody asks out loud. They surface after the meeting, after expectations have been set, and after refusing has become socially expensive. The matchmaking office in the middle sees names and reputations, not the answers that matter, so it cannot tell an aligned pair from a mismatched one.",
+  "solution": "Kashf puts the hard questions before the introduction instead of after it. Each family answers twelve bilingual questions across two sealed stages — Foundational values, then Practical life — and neither side sees anything until both have finished. What is then released is an alignment summary, never the raw answers: a readiness score against a published gate, four scored dimensions, and an explicit split between where the families agree and where they differ. Clear the gate and the app arranges the meeting itself, down to venue, chaperone and duration.",
+  "impact": "Observed in the demo: twelve questions across two stages, a per-stage threshold of 62% and a final gate at 70%, with contact details exchanged only after both families accept. On a run where answers diverged, the app closed the introduction outright and told both sides the same thing without detail — zero contact information shared. A business figure (introductions handled per advisor, or meetings that proceed to a second meeting) should come from the participant.",
+  "techStack": ["Lovable", "React", "Bilingual EN/AR", "Staged reveal logic", "Client-side scoring engine"],
+  "hardProblem": "Building a compatibility score that stays legible without ever exposing the raw answers behind it. Kashf commits to mutual-completion gating — nothing is released until both sides finish a stage — which means the product must be useful while showing each family only a derived summary. It scores four named dimensions, publishes the threshold it is judging against, separates agreement from difference so a low score reads as an agenda rather than a verdict, and routes free-text disclosures to a human reviewer instead of scoring them. The same discipline extends to the operator: the matchmaking office console shows stage, score and flags, and states plainly that advisors never see the families' raw answers.",
+  "creativeTwist": "Every escape route is designed as carefully as the happy path. A family can pause at any point and the other side is told only that the process is on hold — no reason is shared, and nothing is lost. Concerns go to a reviewer rather than to the other family. When the gate fails, both families receive the same detail-free message and the introduction closes cleanly. In a setting where refusing an introduction can cost a family its standing, making withdrawal cheap and face-preserving is the real product, and it is what turns a scoring engine into something a family would actually agree to use.",
+  "liveLink": "careful-introductions-hub.lovable.app",
+  "projectUrl": "https://careful-introductions-hub.lovable.app/"
+}
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Final Project · Claude Course for Professionals</div>
+    <h1><span class="name-ar">كشف</span>Kashf</h1>
+    <p class="tag">Guided family compatibility before any introduction. Two families answer the questions that actually decide the outcome — sealed, in parallel — and meet only once a shared summary says they are aligned enough to.</p>
+    <div class="byline">
+      <div class="avatar">?</div>
+      <div>
+        <div class="who">Ahmed Atef</div>
+        <div class="role">Claude Course for Professionals · Final Project</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- LIVE DEMO -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Live demo</h2>
+      <p>The working product, running right here. Answer the three intake steps, then walk Stage 1 — the alignment result appears once you trigger the other family's completion. “Matchmaking office view” in the footer opens the operator console.</p>
+    </div>
+    <div class="demo-card">
+      <div class="demo-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="url">careful-introductions-hub.lovable.app</div>
+        <a class="btn btn-g" href="https://careful-introductions-hub.lovable.app/" target="_blank" rel="noopener noreferrer">Open full screen ↗</a>
+      </div>
+      <div class="frame">
+        <iframe src="https://careful-introductions-hub.lovable.app/" title="Kashf — live demo" loading="lazy"
+                referrerpolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+      <div class="demo-note">Demo data only. The app labels its own shortcut where it stands in for the second family: “Demonstration shortcut. In use, this arrives as a private notification.”</div>
+    </div>
+  </section>
+
+  <!-- THE IDEA -->
+  <section class="sec" style="padding-top:8px">
+    <div class="grid2">
+      <div class="card">
+        <div class="field">
+          <div class="f-label">Problem statement</div>
+          <div class="f-val">In Gulf family-led introductions, the questions that actually decide the outcome — daily religious practice, where the couple will live, whether the bride keeps her career, when children come, how money is arranged — are the ones nobody asks out loud. They surface after the meeting, after expectations have been set, and after refusing has become socially expensive for both households. The matchmaking office in the middle sees names and reputations, not the answers that matter, so it cannot tell an aligned pair from a mismatched one.</div>
+        </div>
+        <div class="field">
+          <div class="f-label">Solution overview</div>
+          <div class="f-val">Kashf moves the hard questions in front of the introduction instead of after it. Each family answers twelve bilingual questions across two sealed stages — <b>Foundational values</b>, then <b>Practical life</b> — and neither side sees anything until both have finished. What is released is an alignment summary, never the raw answers: a readiness score against a published gate, four scored dimensions, and an explicit split between where the families agree and where they differ. Clear the gate and the app arranges the meeting itself.</div>
+        </div>
+        <div class="field">
+          <div class="f-label">The creative twist</div>
+          <div class="f-val">Every escape route is designed as carefully as the happy path. A family can <b>pause at any point</b> and the other side is told only that the process is on hold — <i>no reason is shared, and nothing is lost</i>. Concerns go to a reviewer, not to the other family. When the gate fails, both households get the same detail-free message and the introduction closes cleanly. In a setting where refusing can cost a family its standing, making withdrawal cheap and face-preserving is the real product — it is what turns a scoring engine into something a family would agree to use at all.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <div class="f-label">Impact / ROI note</div>
+          <div class="stat">12 questions, 2 sealed stages<br>before any contact details</div>
+          <div class="f-val" style="margin-top:8px;color:var(--muted);font-size:13px">Observed in the demo: a 62% threshold to clear each stage and a 70% gate on the final summary. On a run where the two sides diverged, the app closed the introduction outright and told both families the same thing without detail — no contact information exchanged.</div>
+          <div class="f-val" style="margin-top:10px"><span class="todo">to confirm</span> <span class="todo-val">A business-side figure from the participant — introductions handled per advisor, or the share of arranged meetings that lead to a second one.</span></div>
+        </div>
+        <div class="field">
+          <div class="f-label">Tech stack</div>
+          <div class="pills">
+            <span class="pill">Lovable</span>
+            <span class="pill">React</span>
+            <span class="pill">Bilingual EN/AR</span>
+            <span class="pill">Staged reveal logic</span>
+            <span class="pill">Client-side scoring engine</span>
+          </div>
+          <div class="f-val" style="margin-top:9px"><span class="todo">to confirm</span> <span class="todo-val">Which Claude features were used, and where — question design, the alignment copy, or building the app itself?</span></div>
+        </div>
+        <div class="field">
+          <div class="f-label">Live link</div>
+          <div class="f-val"><a href="https://careful-introductions-hub.lovable.app/" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-weight:500;text-decoration:none">careful-introductions-hub.lovable.app ↗</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MECHANISM -->
+  <section class="sec" style="padding-top:8px">
+    <div class="sec-head">
+      <h2>How the filter actually works</h2>
+      <p>Two mechanisms carry the product: a set of absolute blockers checked before anything begins, and a sealed reveal that releases only derived summaries.</p>
+    </div>
+    <div class="mech">
+      <div class="mech-box">
+        <h4>Before scoring — the blockers</h4>
+        <div class="sub">Declared at intake. “A match is stopped before it begins if it crosses any of these. Choose only what you would truly refuse.”</div>
+        <div class="mech-list">
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Living outside the Gulf</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Living within the family compound</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Bride leaving her career</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Delaying children beyond three years</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Second marriage in future</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="en" style="color:var(--text)">Smoking in the household</span></div>
+        </div>
+      </div>
+      <div class="mech-box">
+        <h4>The sealed reveal</h4>
+        <div class="sub">Nothing crosses between the families until both sides finish a stage — and even then, only a summary.</div>
+        <div class="mech-list">
+          <div class="mech-item"><span class="n lock">1</span><span class="en" style="color:var(--text)">Each family answers a stage privately — scales, choices, rankings and free text, every question in English and Arabic</span></div>
+          <div class="mech-item"><span class="n lock">2</span><span class="en" style="color:var(--text)">Both sides see progress only: “Stage submitted” against “Still answering”</span></div>
+          <div class="mech-item"><span class="n lock">3</span><span class="en" style="color:var(--text)">On mutual completion the summary opens for both at the same moment — four dimensions, never raw answers</span></div>
+          <div class="mech-item"><span class="n lock">4</span><span class="en" style="color:var(--text)">Free-text disclosures are routed to a human reviewer rather than scored</span></div>
+          <div class="mech-item"><span class="n lock">5</span><span class="en" style="color:var(--text)">Contact details are exchanged only once both families accept a meeting</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote">
+      <div class="q-en">“Kashf recommends. Your family decides. Nothing has been shared with the other side beyond this summary.”</div>
+      <div class="q-sub">— from the alignment summary, immediately above the accept / hold buttons</div>
+    </div>
+  </section>
+
+  <!-- HARD PROBLEM -->
+  <section class="sec" style="padding-top:8px">
+    <div class="card">
+      <div class="field">
+        <div class="f-label">The hard problem solved</div>
+        <div class="f-val">Building a compatibility score that stays <b>legible without ever exposing the answers behind it</b>. Committing to mutual-completion gating means the product has to be useful while showing each family only a derived summary — so Kashf scores four named dimensions (<i>Faith &amp; values, Family expectations, Financial arrangements, Lifestyle &amp; daily life</i>), publishes the threshold it is judging against rather than hiding it, and splits the result into “Where you agree” and “Where you differ” so a weak dimension reads as an agenda item — <i>“worth discussing plainly before anything is arranged”</i> — instead of a verdict. Weak dimensions even render in gold rather than green, marking them without condemning them.</div>
+        <div class="f-val" style="margin-top:10px">The same discipline extends to the operator. The matchmaking office console — <span class="ar">بيت الوصال</span>, read-only — lists cases by reference (KF-1179, KF-1166), showing stage, score and review flags, and states the constraint on its own face: <b>“Stage and score only. Advisors never see the families' raw answers.”</b> The business that runs Kashf is held to the same privacy rule as the families using it.</div>
+      </div>
+      <div class="callout">
+        <b>Worth noting for judging:</b> the flow does not stop at a score. Clearing the gate opens meeting coordination built for the actual setting — dates in the Hijri calendar timed to prayer (<i>Thursday 14 Rajab, evening, after Maghrib</i>), a venue shortlist led by a private majlis with separate family seating, and a protocol both households confirm: chaperone agreed, ninety minutes, no photography, no third parties invited.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <span>© 2026 Meska AI — Confidential</span>
+  <span>Final Project Leaderboard · Claude Course for Professionals</span>
+</footer>
+
+</body>
+</html>
