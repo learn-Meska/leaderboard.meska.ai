@@ -8,16 +8,18 @@
 
 -- ---------- 1. PROFILES (your lead list) ----------
 create table if not exists public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  name        text not null,
-  email       text not null,
-  mobile      text,
-  title       text,
-  company     text,
-  linkedin    text,
-  is_admin    boolean not null default false,
-  created_at  timestamptz not null default now()
+  id                uuid primary key references auth.users(id) on delete cascade,
+  name              text not null,
+  email             text not null,
+  mobile            text,
+  wants_courses     boolean not null default false,
+  community_member  boolean not null default false,
+  is_admin          boolean not null default false,
+  created_at        timestamptz not null default now()
 );
+-- Upgrade path for an already-created table (this create is a no-op there).
+alter table public.profiles add column if not exists wants_courses boolean not null default false;
+alter table public.profiles add column if not exists community_member boolean not null default false;
 alter table public.profiles enable row level security;
 
 drop policy if exists "read own profile" on public.profiles;
@@ -108,6 +110,8 @@ create table if not exists public.projects (
   problem        text,
   solution       text,
   impact         text,
+  course_name    text,
+  cohort_tag     text,
   project_html   text,
   project_url    text,
   screenshot     text,
@@ -121,6 +125,10 @@ create table if not exists public.projects (
   submitted_by   text,
   created_at     timestamptz not null default now()
 );
+-- Upgrade path for an already-created table (this create is a no-op there).
+-- Admin-only classification, never shown on the public voter card.
+alter table public.projects add column if not exists course_name text;
+alter table public.projects add column if not exists cohort_tag text;
 alter table public.projects enable row level security;
 
 -- Voters only ever see approved projects.
