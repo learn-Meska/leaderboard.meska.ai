@@ -1420,17 +1420,11 @@ h1, h2, h3, h4 {
           <div class="field"><div class="field-label">Confirm</div><input type="password" id="r_password2" class="text-input" required placeholder="Repeat"></div>
         </div>
         <button type="submit" class="btn btn-primary" id="registerSubmitBtn" style="justify-content:center;">Create account &amp; continue</button>
-        <div class="demo-creds">Demo only — your details stay in this browser and are never sent anywhere.</div>
       </form>
       <form class="auth-form" id="loginForm">
         <div class="field"><div class="field-label">Email</div><input type="email" id="l_email" class="text-input" required placeholder="you@company.com"></div>
         <div class="field"><div class="field-label">Password</div><input type="password" id="l_password" class="text-input" required placeholder="Your password"></div>
         <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="justify-content:center;">Log in</button>
-        <div class="demo-creds">
-          Pre-made demo accounts:<br>
-          <b>Admin</b> &mdash; <code>admin@meska.ai</code> / <code>demo1234</code><br>
-          <b>Participant</b> &mdash; <code>laila@example.com</code> / <code>demo1234</code>
-        </div>
       </form>
     </div>
   </div>
@@ -1586,7 +1580,7 @@ const Store = (() => {
       sb.from('votes').select('category,project_id,voter_id,created_at'),
     ]);
     _users = (u.data || []).map(x => ({
-      email: x.email, name: x.name, mobile: x.mobile || '', title: x.title || '',
+      id: x.id, email: x.email, name: x.name, mobile: x.mobile || '', title: x.title || '',
       company: x.company || '', linkedin: x.linkedin || '', isAdmin: !!x.is_admin,
       createdAt: x.created_at,
     }));
@@ -1866,6 +1860,11 @@ const Store = (() => {
 
 /* ---------- Shared render helpers ---------- */
 function initials(name) { return (name || '?').split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
+function avatarFor(project, cls) {
+  return project.photo
+    ? `<img class="${cls}" src="${escapeHtml(project.photo)}" alt="">`
+    : `<div class="${cls}">${initials(project.participant)}</div>`;
+}
 function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str == null ? '' : String(str); return div.innerHTML; }
 // Attribute-safe: escapes quotes too, so a whole HTML document can live in srcdoc.
 function escapeAttr(str) {
@@ -2088,7 +2087,7 @@ function renderCard(project) {
   return `
   <article class="pcard" id="card-${p.id}" data-project-id="${p.id}">
     <div class="pcard-head">
-      <div class="pcard-avatar">${initials(p.participant)}</div>
+      ${avatarFor(p, 'pcard-avatar')}
       <div class="pcard-title">
         <h3>${escapeHtml(p.name)}${p.sample ? ' <span style="font-size:11px;font-weight:500;color:var(--muted-2);border:1px solid var(--border);padding:2px 8px;border-radius:999px;vertical-align:middle;">sample</span>' : ''}</h3>
         <div class="tagline">${escapeHtml(p.tagline)}</div>
@@ -2759,12 +2758,6 @@ const Fireworks = (() => {
 
   const CATEGORY_EMOJI = { roi: '💰', technical: '🛠️', creative: '🎨', cohort: '🤝' };
 
-  function avatarFor(project, cls) {
-    return project.photo
-      ? `<img class="${cls}" src="${escapeHtml(project.photo)}" alt="">`
-      : `<div class="${cls}">${initials(project.participant)}</div>`;
-  }
-
   function rankedFor(category, projects) {
     const counts = Store.tally(category.id);
     return [...projects].map(p => ({ project: p, count: counts[p.id] || 0 })).sort((a, b) => b.count - a.count);
@@ -3220,7 +3213,7 @@ const Fireworks = (() => {
       const hasVideo = !!safeUrl(p.demoLink);
       return `
       <div class="admin-project-row" data-id="${p.id}">
-        <div class="apr-avatar">${initials(p.participant)}</div>
+        ${avatarFor(p, 'apr-avatar')}
         <div class="apr-main">
           <div class="apr-name">
             ${escapeHtml(p.name)}${p.sample ? ' <span style="font-size:10.5px;color:var(--muted-2);">(sample)</span>' : ''}
@@ -3446,10 +3439,9 @@ const Fireworks = (() => {
 
   function voterRows() {
     return Store.getUsers().map(u => {
-      const key = u.email.toLowerCase();
       const picks = {};
       Store.CATEGORIES.forEach(c => {
-        const v = (Store.getVotes()[c.id] || {})[key];
+        const v = (Store.getVotes()[c.id] || {})[u.id];
         picks[c.id] = v ? projectNameById(v) : '';
       });
       const voted = Store.CATEGORIES.some(c => picks[c.id]);
