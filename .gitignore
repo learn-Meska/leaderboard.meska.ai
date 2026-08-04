@@ -1,0 +1,10 @@
+# Internal — never publish
+hqv-kwan-onh*.mp4
+*.mp4
+meska-leaderboard-leads.csv
+
+# macOS
+.DS_Store
+
+# Local Claude Code state
+.claude/

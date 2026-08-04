@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خاطبة (Khatba) — Final Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B1E3A; --navy-2:#14315E; --royal:#1D4ED8; --blue:#2563EB; --blue-light:#93C5FD;
+  --ice:#EFF6FF; --ice-2:#DBEAFE; --gold:#FBBF24;
+  --text:#1F2937; --muted:#6B7280; --muted-2:#9CA3AF; --border:#E1E7F5;
+  --surface:#fff; --sunk:#F6F9FF;
+  --grad:linear-gradient(150deg,var(--navy) 0%,var(--navy-2) 45%,var(--royal) 130%);
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --shadow:0 1px 2px rgba(11,30,58,.06),0 8px 24px -12px rgba(11,30,58,.18);
+  --font:'Poppins','Liberation Sans',Arial,sans-serif;
+  --font-ar:'IBM Plex Sans Arabic','Poppins',sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);font-weight:300;color:var(--text);background:var(--sunk);line-height:1.6}
+h1,h2,h3,h4{font-family:var(--font);font-weight:700;margin:0;letter-spacing:-.01em}
+.ar{font-family:var(--font-ar);direction:rtl;unicode-bidi:isolate}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+
+/* hero */
+.hero{background:var(--grad);background-color:var(--navy);color:#fff;position:relative;overflow:hidden;padding:44px 0 40px}
+.hero::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:42px 42px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent 90%)}
+.hero::after{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.5),transparent 70%)}
+.hero .wrap{position:relative;z-index:1}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--blue-light)}
+.hero h1{font-size:clamp(30px,4.6vw,46px);line-height:1.05;margin:14px 0 4px}
+.hero .name-ar{font-family:var(--font-ar);font-size:clamp(26px,4vw,38px);font-weight:700;color:#fff;display:block;margin-bottom:2px}
+.hero .tag{font-size:17px;font-weight:400;color:rgba(255,255,255,.82);margin-top:10px;max-width:640px}
+.hero .tag-ar{font-family:var(--font-ar);direction:rtl;display:inline-block;text-align:right;font-size:18px;color:#BFDBFE;margin-top:6px}
+.byline{display:flex;align-items:center;gap:12px;margin-top:24px;flex-wrap:wrap}
+.avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+.byline .who{font-size:14px;font-weight:500;color:#fff}
+.byline .role{font-size:12px;color:rgba(255,255,255,.6)}
+
+/* section */
+.sec{padding:38px 0}
+.sec-head{margin-bottom:16px}
+.sec-head h2{font-size:20px;color:var(--navy)}
+.sec-head p{font-size:13.5px;color:var(--muted);margin:4px 0 0}
+
+/* demo embed */
+.demo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.demo-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--sunk);flex-wrap:wrap}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#E5E7EB;display:block}
+.dots i:nth-child(1){background:#FCA5A5}.dots i:nth-child(2){background:#FCD34D}.dots i:nth-child(3){background:#86EFAC}
+.url{flex:1;min-width:160px;text-align:center;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:5px 14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:12.5px;font-weight:500;padding:7px 14px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:.15s}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:var(--royal)}
+.btn-g{border-color:var(--border);color:var(--text);background:#fff}.btn-g:hover{border-color:var(--blue);color:var(--blue)}
+.frame{position:relative;width:100%;height:640px;background:#0B1220}
+.frame iframe{width:100%;height:100%;border:0;display:block}
+@media(max-width:700px){.frame{height:520px}}
+.demo-note{font-size:12px;color:var(--muted-2);padding:10px 16px;border-top:1px solid var(--border);background:var(--sunk)}
+
+/* fields */
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:22px}
+@media(max-width:840px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px 24px}
+.field+.field{margin-top:18px}
+.f-label{font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:5px}
+.f-val{font-size:14px;color:var(--text)}
+.stat{font-family:var(--font);font-size:21px;font-weight:700;color:var(--blue);line-height:1.3}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.pill{font-size:12px;font-weight:500;background:var(--ice);color:var(--royal);border:1px solid var(--ice-2);border-radius:999px;padding:4px 11px}
+.pill.ar{font-family:var(--font-ar)}
+
+/* mechanism */
+.mech{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+@media(max-width:840px){.mech{grid-template-columns:1fr}}
+.mech-box{border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;background:var(--surface)}
+.mech-box h4{font-size:14px;color:var(--navy);margin-bottom:3px}
+.mech-box .sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.mech-list{display:flex;flex-direction:column;gap:7px}
+.mech-item{display:flex;align-items:center;gap:9px;font-size:13px}
+.mech-item .n{width:19px;height:19px;border-radius:6px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mech-item .n.blk{background:#B91C1C}
+.mech-item .ar{font-family:var(--font-ar);font-weight:500}
+.mech-item .en{color:var(--muted);font-size:12px}
+
+/* callout */
+.callout{background:linear-gradient(135deg,var(--ice),#fff);border-left:3px solid var(--blue);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:15px 18px;font-size:13.5px;color:var(--navy);margin-top:16px}
+.callout b{color:var(--blue)}
+.quote{background:var(--navy);color:#fff;border-radius:var(--r-md);padding:20px 24px;margin-top:16px}
+.quote .q-ar{font-family:var(--font-ar);direction:rtl;font-size:19px;font-weight:600;line-height:1.5}
+.quote .q-en{font-size:13px;color:var(--blue-light);margin-top:8px}
+
+/* confirm chip */
+.todo{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:6px}
+.todo-val{color:#92400E;font-style:italic}
+
+footer{padding:28px 0 44px;font-size:12px;color:var(--muted-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Final Project · Claude Course for Professionals</div>
+    <h1><span class="name-ar">خاطبة</span>Khatba</h1>
+    <div class="tag-ar ar">الخاطبة رجعت — بس بالمرّة دي بالـAI</div>
+    <p class="tag">The matchmaker is back — this time with AI. A marriage-matching engine that eliminates on dealbreakers first, then explains every score in plain Egyptian Arabic.</p>
+    <div class="byline">
+      <div class="avatar">?</div>
+      <div>
+        <div class="who">Participant name <span class="todo">to confirm</span></div>
+        <div class="role">Claude Course for Professionals · Final Project</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- LIVE DEMO -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Live demo</h2>
+      <p>The full working product, running right here. Take the 90-second assessment, then open “أوزان التوافق” to move the weights and watch the ranking recompute.</p>
+    </div>
+    <div class="demo-card">
+      <div class="demo-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="url">khatba.lovable.app</div>
+        <a class="btn btn-g" href="https://khatba.lovable.app/" target="_blank" rel="noopener noreferrer">Open full screen ↗</a>
+      </div>
+      <div class="frame">
+        <iframe src="https://khatba.lovable.app/" title="Khatba — live demo" loading="lazy"
+                referrerpolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+      <div class="demo-note">Demo data only — all 25 profiles are fictional, as stated in the app itself (<span class="ar">نموذج تجريبي – كل البيانات من نسج الخيال</span>).</div>
+    </div>
+  </section>
+
+  <!-- THE IDEA -->
+  <section class="sec" style="padding-top:8px">
+    <div class="grid2">
+      <div class="card">
+        <div class="field">
+          <div class="f-label">Problem statement</div>
+          <div class="f-val">In the Egyptian marriage market, the things that actually end a relationship — religion, whether you want children and when, relocating cities, how close you live to family, money — are exactly the things dating apps surface last. People sort by photos, invest months, then discover an incompatibility that was knowable on day one. The traditional <span class="ar">خاطبة</span> (matchmaker) screened for precisely those constraints up front, but she didn't scale, and she never showed her reasoning.</div>
+        </div>
+        <div class="field">
+          <div class="f-label">Solution overview</div>
+          <div class="f-val">Khatba inverts the usual order. A 90-second, 8-question assessment captures the hard constraints, and the engine <b>eliminates first</b> — striking out anyone who fails a dealbreaker and naming which one. Only the survivors get scored, across six weighted pillars. Every score comes with a plain-Arabic reason for both the agreements and the gaps, and the user can re-weight the pillars or switch any dealbreaker off to see the ranking rebuild live.</div>
+        </div>
+        <div class="field">
+          <div class="f-label">The creative twist</div>
+          <div class="f-val">The product sells itself by showing you what it <b>refuses</b> to show you. The “<span class="ar">لحظة الفرق</span>” (moment of difference) screen animates candidates being struck off one by one with the reason beside each, lands on “<span class="ar">فضل ١٢ من ١٩</span>” — 12 left out of 19 — then puts a normal dating app side by side with it: <i>it would have shown you 19 profiles sorted by photos, and the real differences would surface months later.</i> Turning exclusion into the headline feature, rather than hiding it, is a genuinely counter-intuitive product decision.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <div class="f-label">Impact / ROI note</div>
+          <div class="stat">7 of 19 candidates ruled out<br>before a single photo</div>
+          <div class="f-val" style="margin-top:8px;color:var(--muted);font-size:13px">Observed in the demo: the assessment takes ~90 seconds and removes 37% of the pool on hard incompatibilities that would otherwise surface months into a relationship.</div>
+          <div class="f-val" style="margin-top:10px"><span class="todo">to confirm</span> <span class="todo-val">A business-side figure from the participant — e.g. matchmaker hours saved per client, or time-to-first-meeting — would strengthen this.</span></div>
+        </div>
+        <div class="field">
+          <div class="f-label">Tech stack</div>
+          <div class="pills">
+            <span class="pill">Lovable</span>
+            <span class="pill">React</span>
+            <span class="pill">Tailwind CSS</span>
+            <span class="pill">Full RTL</span>
+            <span class="pill">Client-side scoring engine</span>
+          </div>
+          <div class="f-val" style="margin-top:9px"><span class="todo">to confirm</span> <span class="todo-val">Which Claude features were used, and where — prompt design, generating the reason text, building the app itself?</span></div>
+        </div>
+        <div class="field">
+          <div class="f-label">Live link</div>
+          <div class="f-val"><a href="https://khatba.lovable.app/" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-weight:500;text-decoration:none">khatba.lovable.app ↗</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MECHANISM -->
+  <section class="sec" style="padding-top:8px">
+    <div class="sec-head">
+      <h2>How the matching actually works</h2>
+      <p>Two stages: hard filters, then weighted scoring. Both are fully exposed to the user.</p>
+    </div>
+    <div class="mech">
+      <div class="mech-box">
+        <h4>Stage 1 — Dealbreakers <span class="ar" style="font-weight:500;color:var(--muted)">الموانع</span></h4>
+        <div class="sub">Binary. Fail one and you're out — with the reason shown. Each can be toggled off to test the effect.</div>
+        <div class="mech-list">
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">اختلاف الديانة</span><span class="en">— religion mismatch</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">السن بره النطاق</span><span class="en">— age outside range</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">المدينة والانتقال</span><span class="en">— city / willingness to relocate</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">الحالة الاجتماعية</span><span class="en">— marital status</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">وجود أولاد</span><span class="en">— existing children</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">موقف متضارب من الإنجاب</span><span class="en">— conflicting stance on having children</span></div>
+          <div class="mech-item"><span class="n blk">✕</span><span class="ar">مستوى التديّن أقل من الحد</span><span class="en">— religiosity below threshold</span></div>
+        </div>
+      </div>
+      <div class="mech-box">
+        <h4>Stage 2 — Six pillars <span class="ar" style="font-weight:500;color:var(--muted)">الأركان الستة</span></h4>
+        <div class="sub">Scored and weighted. The user sets each multiplier themselves and the ranking recomputes live.</div>
+        <div class="mech-list">
+          <div class="mech-item"><span class="n">1</span><span class="ar">التديّن</span><span class="en">— religiosity &amp; practice</span></div>
+          <div class="mech-item"><span class="n">2</span><span class="ar">الحياة العملية</span><span class="en">— work &amp; career rhythm</span></div>
+          <div class="mech-item"><span class="n">3</span><span class="ar">البيت والمال</span><span class="en">— housing &amp; finances</span></div>
+          <div class="mech-item"><span class="n">4</span><span class="ar">الأسرة</span><span class="en">— family closeness &amp; involvement</span></div>
+          <div class="mech-item"><span class="n">5</span><span class="ar">الأولاد</span><span class="en">— children: whether, when, how many</span></div>
+          <div class="mech-item"><span class="n">6</span><span class="ar">الشخصية ونمط الحياة</span><span class="en">— personality &amp; lifestyle</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote">
+      <div class="q-ar">الترتيب مش حقيقة مطلقة — هو نتيجة أوزان. غيّرها وشوف بنفسك.</div>
+      <div class="q-en">“The ranking isn't absolute truth — it's the product of weights. Change them and see for yourself.” — from the weights screen</div>
+    </div>
+  </section>
+
+  <!-- HARD PROBLEM -->
+  <section class="sec" style="padding-top:8px">
+    <div class="card">
+      <div class="field">
+        <div class="f-label">Tech stack &amp; the hard problem solved</div>
+        <div class="f-val">The hard part wasn't computing a score — it was making the score <b>defensible</b>. Most matching products emit an opaque number. Khatba had to generate, for every candidate pair and every pillar, a specific human-readable sentence covering both agreement and gap: <span class="ar">“متقاربين ماديًا: هيأجّر وهيأجّر”</span> (financially aligned — both renting), <span class="ar">“فجوة مالية: هيأجّر مقابل الأهل هيساعدوا”</span> (financial gap — he'll rent, her family will help), <span class="ar">“التوقيت مختلف: بعد سنة لسنتين مقابل مش متأكد”</span> (timing differs — 1–2 years vs. unsure).</div>
+        <div class="f-val" style="margin-top:10px">It also handles the genuinely ambiguous case rather than forcing a verdict — where two people are neither aligned nor opposed, it says so: <span class="ar">“مفيش اتفاق قوي ولا اختلاف حاد — كله في المنطقة الوسط.”</span> On top of that, the whole product is built right-to-left in Egyptian colloquial rather than translated Modern Standard Arabic, which is what makes it read like a person and not a form.</div>
+      </div>
+      <div class="callout">
+        <b>Worth noting for judging:</b> the flow doesn't stop at a match list. It continues through <span class="ar">طلب التعارف</span> (introduction request) → <span class="ar">المحادثة</span> (chat) → <span class="ar">التحضير</span> (preparation) → <span class="ar">اللقاء</span> (the meeting), with 25 fully-written personas behind it. This is a complete product journey, not a single screen.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <span>© 2026 Meska AI — Confidential</span>
+  <span>Final Project Leaderboard · Claude Course for Professionals</span>
+</footer>
+
+</body>
+</html>
