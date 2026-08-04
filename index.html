@@ -1336,7 +1336,7 @@ h1, h2, h3, h4 {
           <div class="field span-2"><div class="field-label">Tagline — one line, plain language</div><input type="text" id="f_tagline" class="text-input" placeholder="One sentence that says what it is"></div>
           <div class="field"><div class="field-label">Participant name</div><input type="text" id="f_participant" class="text-input" placeholder="Full name"></div>
           <div class="field"><div class="field-label">Impact / ROI note</div><input type="text" id="f_impact" class="text-input" placeholder="A number, even an estimate"></div>
-          <div class="field span-2">
+          <div class="field">
             <div class="field-label">Course</div>
             <select id="f_courseName" class="text-input">
               <option value="">— Select —</option>
@@ -1345,17 +1345,10 @@ h1, h2, h3, h4 {
               <option value="AI Copilot Diploma-Online">AI Copilot Diploma-Online</option>
             </select>
           </div>
-          <div class="field span-2">
+          <div class="field">
             <div class="field-label">Cohort tag <span style="text-transform:none;letter-spacing:0;color:var(--muted-2)">(optional)</span></div>
-            <div style="display:flex;align-items:center;gap:14px;">
-              <div id="f_cohortTagPreview" style="width:64px;height:64px;border-radius:10px;background:var(--surface-sunk);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;">&#127991;</div>
-              <div>
-                <button type="button" class="btn btn-ghost btn-sm" id="f_cohortTagBtn">Choose file</button>
-                <button type="button" class="btn btn-ghost btn-sm" id="f_cohortTagClear">Clear</button>
-                <div style="font-size:11.5px;color:var(--muted-2);margin-top:5px;">Internal use — badge or file identifying which cohort intake this is. Not shown to voters.</div>
-              </div>
-            </div>
-            <input type="file" id="f_cohortTagFile" accept="image/*" style="display:none;">
+            <input type="text" id="f_cohortTag" class="text-input" placeholder="e.g. Wave 10, C1, O5">
+            <div style="font-size:11.5px;color:var(--muted-2);margin-top:5px;">Internal use — which cohort intake this is. Not shown to voters.</div>
           </div>
           <div class="field span-2"><div class="field-label">Problem statement (2–3 sentences)</div><textarea id="f_problem" class="text-input" rows="2" placeholder="What problem this solves, and for whom."></textarea></div>
           <div class="field span-2"><div class="field-label">Solution overview (2–3 sentences)</div><textarea id="f_solution" class="text-input" rows="2" placeholder="What the participant actually built."></textarea></div>
@@ -3026,13 +3019,12 @@ const Fireworks = (() => {
   const modalCancelBtn = document.getElementById('modalCancelBtn');
   const modalSaveBtn = document.getElementById('modalSaveBtn');
 
-  const fields = ['name', 'tagline', 'participant', 'impact', 'courseName', 'problem', 'solution', 'projectHtml', 'projectUrl', 'techStack', 'hardProblem', 'creativeTwist', 'liveLink', 'demoLink']
+  const fields = ['name', 'tagline', 'participant', 'impact', 'courseName', 'cohortTag', 'problem', 'solution', 'projectHtml', 'projectUrl', 'techStack', 'hardProblem', 'creativeTwist', 'liveLink', 'demoLink']
     .reduce((acc, key) => { acc[key] = document.getElementById('f_' + key); return acc; }, {});
 
   let editingId = null;
   let pendingPhoto = '';     // data URL
   let pendingShot = '';      // data URL
-  let pendingCohortTag = ''; // data URL
 
   const el = (id) => document.getElementById(id);
 
@@ -3083,18 +3075,6 @@ const Fireworks = (() => {
   });
   el('f_shotClear').addEventListener('click', () => {
     pendingShot = ''; el('f_shotPreview').innerHTML = '&#128444;'; el('f_shotFile').value = '';
-  });
-
-  el('f_cohortTagBtn').addEventListener('click', () => el('f_cohortTagFile').click());
-  el('f_cohortTagFile').addEventListener('change', () => {
-    const f = el('f_cohortTagFile').files[0]; if (!f) return;
-    readImage(f, { square: true }, (url) => {
-      pendingCohortTag = url;
-      el('f_cohortTagPreview').innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
-    });
-  });
-  el('f_cohortTagClear').addEventListener('click', () => {
-    pendingCohortTag = ''; el('f_cohortTagPreview').innerHTML = '&#127991;'; el('f_cohortTagFile').value = '';
   });
 
   function setHtmlStatus() {
@@ -3318,13 +3298,12 @@ const Fireworks = (() => {
 
   function clearForm() {
     fields.name.value = ''; fields.tagline.value = ''; fields.participant.value = ''; fields.impact.value = '';
-    fields.courseName.value = '';
+    fields.courseName.value = ''; fields.cohortTag.value = '';
     fields.problem.value = ''; fields.solution.value = '';
     fields.projectHtml.value = ''; fields.projectUrl.value = '';
-    pendingPhoto = ''; pendingShot = ''; pendingCohortTag = '';
+    pendingPhoto = ''; pendingShot = '';
     el('f_photoPreview').innerHTML = '&#128100;'; el('f_shotPreview').innerHTML = '&#128444;';
-    el('f_cohortTagPreview').innerHTML = '&#127991;';
-    el('f_photoFile').value = ''; el('f_shotFile').value = ''; el('f_htmlFile').value = ''; el('f_cohortTagFile').value = '';
+    el('f_photoFile').value = ''; el('f_shotFile').value = ''; el('f_htmlFile').value = '';
     setHtmlStatus();
     fields.techStack.value = ''; fields.hardProblem.value = ''; fields.creativeTwist.value = ''; fields.liveLink.value = ''; fields.demoLink.value = '';
   }
@@ -3335,15 +3314,13 @@ const Fireworks = (() => {
       const p = Store.getProjects().find(x => x.id === id);
       modalTitle.textContent = 'Edit project';
       fields.name.value = p.name || ''; fields.tagline.value = p.tagline || ''; fields.participant.value = p.participant || '';
-      fields.impact.value = p.impact || ''; fields.courseName.value = p.courseName || ''; fields.problem.value = p.problem || ''; fields.solution.value = p.solution || '';
+      fields.impact.value = p.impact || ''; fields.courseName.value = p.courseName || ''; fields.cohortTag.value = p.cohortTag || ''; fields.problem.value = p.problem || ''; fields.solution.value = p.solution || '';
       fields.projectHtml.value = p.projectHtml || '';
       fields.projectUrl.value = p.projectUrl || '';
       pendingPhoto = p.photo || '';
       pendingShot = p.screenshot || '';
-      pendingCohortTag = p.cohortTag || '';
       el('f_photoPreview').innerHTML = pendingPhoto ? `<img src="${pendingPhoto}" style="width:100%;height:100%;object-fit:cover;">` : '&#128100;';
       el('f_shotPreview').innerHTML = pendingShot ? `<img src="${pendingShot}" style="width:100%;height:100%;object-fit:cover;">` : '&#128444;';
-      el('f_cohortTagPreview').innerHTML = pendingCohortTag ? `<img src="${pendingCohortTag}" style="width:100%;height:100%;object-fit:cover;">` : '&#127991;';
       setHtmlStatus();
       fields.techStack.value = (p.techStack || []).join(', '); fields.hardProblem.value = p.hardProblem || '';
       fields.creativeTwist.value = p.creativeTwist || ''; fields.liveLink.value = p.liveLink || ''; fields.demoLink.value = p.demoLink || '';
@@ -3364,12 +3341,11 @@ const Fireworks = (() => {
     if (!fields.name.value.trim() || !fields.participant.value.trim()) { showToast('Project name and participant are required.'); return; }
     const data = {
       name: fields.name.value.trim(), tagline: fields.tagline.value.trim(), participant: fields.participant.value.trim(),
-      impact: fields.impact.value.trim(), courseName: fields.courseName.value, problem: fields.problem.value.trim(), solution: fields.solution.value.trim(),
+      impact: fields.impact.value.trim(), courseName: fields.courseName.value, cohortTag: fields.cohortTag.value.trim(), problem: fields.problem.value.trim(), solution: fields.solution.value.trim(),
       projectHtml: fields.projectHtml.value,
       projectUrl: fields.projectUrl.value.trim(),
       photo: pendingPhoto,
       screenshot: pendingShot,
-      cohortTag: pendingCohortTag,
       techStack: fields.techStack.value.split(',').map(s => s.trim()).filter(Boolean),
       hardProblem: fields.hardProblem.value.trim(), creativeTwist: fields.creativeTwist.value.trim(), liveLink: fields.liveLink.value.trim(),
       demoLink: fields.demoLink.value.trim(),

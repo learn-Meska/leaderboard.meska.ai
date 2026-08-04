@@ -132,8 +132,10 @@ create table if not exists public.projects (
 );
 -- Upgrade path for an already-created table (this create is a no-op there).
 -- course_name / cohort_tag are admin-only classification, never shown on
--- the public voter card. demo_link is a YouTube/Drive/Vimeo/Loom URL,
--- embedded via the videoEmbed()/videoMeta() render helpers.
+-- the public voter card. cohort_tag is a short free-text label for the
+-- intake, e.g. "Wave 10", "C1", "O5" — not a file. demo_link is a
+-- YouTube/Drive/Vimeo/Loom URL, embedded via the videoEmbed()/videoMeta()
+-- render helpers.
 alter table public.projects add column if not exists course_name text;
 alter table public.projects add column if not exists cohort_tag text;
 alter table public.projects add column if not exists demo_link text;
