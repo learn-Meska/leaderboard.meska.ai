@@ -1242,6 +1242,14 @@ h1, h2, h3, h4 {
           <label class="toggle-row"><input type="checkbox" id="setResultsRevealed"><span>Reveal results publicly <em>(off = voters see only the total vote count, never per-project standings)</em></span></label>
           <label class="toggle-row"><input type="checkbox" id="setSelfVoting"><span>Allow self-voting <em>(not enforced automatically — no login system; state the rule to the cohort)</em></span></label>
           <div class="field" style="grid-column:1/-1;">
+            <div class="field-label">Open for voting — cohorts <span style="text-transform:none;letter-spacing:0;color:var(--muted-2)">(none checked = every cohort's projects are votable)</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;">
+              <label class="toggle-row" style="width:auto;"><input type="checkbox" class="cohort-toggle" value="Claude Course"><span>Claude Course</span></label>
+              <label class="toggle-row" style="width:auto;"><input type="checkbox" class="cohort-toggle" value="AI Copilot Diploma-Offline"><span>AI Copilot Diploma-Offline</span></label>
+              <label class="toggle-row" style="width:auto;"><input type="checkbox" class="cohort-toggle" value="AI Copilot Diploma-Online"><span>AI Copilot Diploma-Online</span></label>
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
             <div class="field-label">Rules note shown on the Vote page</div>
             <input type="text" id="setRulesNote" class="text-input">
           </div>
@@ -1401,6 +1409,7 @@ h1, h2, h3, h4 {
           <div class="field span-2"><div class="field-label">Hard problem solved</div><textarea id="f_hardProblem" class="text-input" rows="2" placeholder="One specific hard thing the participant solved — anchor for Best Technical."></textarea></div>
           <div class="field span-2"><div class="field-label">The creative twist</div><textarea id="f_creativeTwist" class="text-input" rows="2" placeholder="The unexpected / unconventional use case."></textarea></div>
           <div class="field span-2"><div class="field-label">Live link / repo (optional)</div><input type="text" id="f_liveLink" class="text-input" placeholder="e.g. github.com/user/project"></div>
+          <div class="field span-2"><div class="field-label">Demo video (optional)</div><input type="text" id="f_demoLink" class="text-input" placeholder="YouTube or Google Drive link"></div>
         </div>
       </div>
       <div class="modal-foot">
@@ -1505,7 +1514,7 @@ const Store = (() => {
   let _profile = null;
   let _projects = [];
   let _settings = { votingOpen: true, requireViewAll: false, selfVotingAllowed: false,
-                    resultsRevealed: false, rulesNote: '', eventName: '' };
+                    resultsRevealed: false, rulesNote: '', eventName: '', openCohorts: [] };
   let _roster = [];
   let _users = [];                 // admin only
   let _myVotes = {};               // { category: projectId }
@@ -1530,7 +1539,7 @@ const Store = (() => {
     id: r.id, name: r.name, tagline: r.tagline || '', participant: r.participant,
     photo: r.photo || '', problem: r.problem || '', solution: r.solution || '',
     impact: r.impact || '', courseName: r.course_name || '', cohortTag: r.cohort_tag || '',
-    projectHtml: r.project_html || '', projectUrl: r.project_url || '',
+    projectHtml: r.project_html || '', projectUrl: r.project_url || '', demoLink: r.demo_link || '',
     screenshot: r.screenshot || '', techStack: r.tech_stack || [],
     hardProblem: r.hard_problem || '', creativeTwist: r.creative_twist || '',
     liveLink: r.live_link || '', status: r.status, rejectReason: r.reject_reason || '',
@@ -1540,14 +1549,14 @@ const Store = (() => {
     name: p.name, tagline: p.tagline, participant: p.participant, photo: p.photo || null,
     problem: p.problem, solution: p.solution, impact: p.impact,
     course_name: p.courseName || null, cohort_tag: p.cohortTag || null,
-    project_html: p.projectHtml || null, project_url: p.projectUrl || null,
+    project_html: p.projectHtml || null, project_url: p.projectUrl || null, demo_link: p.demoLink || null,
     screenshot: p.screenshot || null, tech_stack: p.techStack || [],
     hard_problem: p.hardProblem, creative_twist: p.creativeTwist, live_link: p.liveLink,
   });
   const toSettings = (r) => ({
     votingOpen: r.voting_open, requireViewAll: r.require_view_all,
     selfVotingAllowed: r.self_voting_allowed, resultsRevealed: r.results_revealed,
-    rulesNote: r.rules_note, eventName: r.event_name,
+    rulesNote: r.rules_note, eventName: r.event_name, openCohorts: r.open_cohorts || [],
   });
 
   /* ---------- fetchers ---------- */
@@ -1668,6 +1677,15 @@ const Store = (() => {
   const getProjects = () => _projects;
   const getApprovedProjects = () => _projects.filter(p => p.status === 'approved');
   const getPendingProjects = () => _projects.filter(p => p.status === 'pending');
+  // What voters actually see on the Vote page. An empty openCohorts list means
+  // no cohort restriction is in effect — every approved project is votable,
+  // same as before this feature existed. Once cohorts are checked, only
+  // approved projects tagged with one of them show up.
+  const getVotableProjects = () => {
+    const open = (_settings.openCohorts || []);
+    if (!open.length) return getApprovedProjects();
+    return getApprovedProjects().filter(p => open.includes(p.courseName));
+  };
   const getSettings = () => _settings;
   const getRoster = () => _roster;
   const myProjects = () => {
@@ -1760,7 +1778,7 @@ const Store = (() => {
     const { error } = await sb.from('settings').update({
       voting_open: s.votingOpen, require_view_all: s.requireViewAll,
       self_voting_allowed: s.selfVotingAllowed, results_revealed: s.resultsRevealed,
-      rules_note: s.rulesNote, event_name: s.eventName,
+      rules_note: s.rulesNote, event_name: s.eventName, open_cohorts: s.openCohorts || [],
     }).eq('id', true);
     if (error) throw error;
     await Promise.all([loadSettings(), loadStandings()]);
@@ -1868,7 +1886,7 @@ const Store = (() => {
 
   return {
     CATEGORIES, ready, lastError,
-    getProjects, getApprovedProjects, getPendingProjects, myProjects,
+    getProjects, getApprovedProjects, getVotableProjects, getPendingProjects, myProjects,
     addProject, updateProject, removeProject, setProjectStatus, rejectProject, submitProject,
     getVotes, getVoteLog, votesPerDay, myVoteFor, castVote, tally,
     countsPerCategory, totalVotesCast, distinctVoters, resetVotes,
@@ -2132,6 +2150,7 @@ function renderCard(project) {
         <div class="field"><div class="field-label">Impact / ROI Note</div><div class="stat-value">${escapeHtml(p.impact)}</div></div>
         <div class="field"><div class="field-label">Tech Stack &amp; Hard Problem Solved</div>${renderTechPills(p)}<div class="field-value" style="margin-top:8px;">${escapeHtml(p.hardProblem)}</div></div>
         <div class="field"><div class="field-label">Live Link / Repo</div><div class="field-value strong">${safeUrl(p.liveLink) ? `<a href="${escapeHtml(safeUrl(p.liveLink))}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.liveLink)} ↗</a>` : '<span style="color:var(--muted-2); font-weight:300;">Not provided</span>'}</div></div>
+        ${safeUrl(p.demoLink) ? `<div class="field"><div class="field-label">Demo Video</div>${renderVideoThumb(p)}</div>` : ''}
         ${(p.demoShots || []).length ? `<div class="field"><div class="field-label">Screenshots</div><div class="demo-shots">${p.demoShots.slice(0,5).map(s => `<div class="shot-ph">${escapeHtml(s)}</div>`).join('')}</div></div>` : ''}
       </div>
     </div>
@@ -2572,7 +2591,7 @@ const Auth = (() => {
   window.addEventListener('resize', scalePreviews);
 
   function renderGrid() {
-    orderedProjects = orderProjects(Store.getApprovedProjects());
+    orderedProjects = orderProjects(Store.getVotableProjects());
     if (!orderedProjects.length) { grid.innerHTML = ''; emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
     grid.innerHTML = orderedProjects.map(p => renderTile(p, votedCountFor(p.id))).join('');
@@ -3007,7 +3026,7 @@ const Fireworks = (() => {
   const modalCancelBtn = document.getElementById('modalCancelBtn');
   const modalSaveBtn = document.getElementById('modalSaveBtn');
 
-  const fields = ['name', 'tagline', 'participant', 'impact', 'courseName', 'problem', 'solution', 'projectHtml', 'projectUrl', 'techStack', 'hardProblem', 'creativeTwist', 'liveLink']
+  const fields = ['name', 'tagline', 'participant', 'impact', 'courseName', 'problem', 'solution', 'projectHtml', 'projectUrl', 'techStack', 'hardProblem', 'creativeTwist', 'liveLink', 'demoLink']
     .reduce((acc, key) => { acc[key] = document.getElementById('f_' + key); return acc; }, {});
 
   let editingId = null;
@@ -3172,6 +3191,8 @@ const Fireworks = (() => {
     setResultsRevealed.checked = !!s.resultsRevealed;
     setSelfVoting.checked = s.selfVotingAllowed;
     setRulesNote.value = s.rulesNote;
+    const openCohorts = s.openCohorts || [];
+    document.querySelectorAll('.cohort-toggle').forEach(cb => { cb.checked = openCohorts.includes(cb.value); });
   }
 
   saveSettingsBtn.addEventListener('click', async () => {
@@ -3183,6 +3204,7 @@ const Fireworks = (() => {
       selfVotingAllowed: setSelfVoting.checked,
       rulesNote: setRulesNote.value.trim() || 'One vote per person, per category.',
       eventName: Store.getSettings().eventName,
+      openCohorts: [...document.querySelectorAll('.cohort-toggle')].filter(cb => cb.checked).map(cb => cb.value),
     });
     settingsSaveHint.classList.add('show');
     setTimeout(() => settingsSaveHint.classList.remove('show'), 1800);
@@ -3304,7 +3326,7 @@ const Fireworks = (() => {
     el('f_cohortTagPreview').innerHTML = '&#127991;';
     el('f_photoFile').value = ''; el('f_shotFile').value = ''; el('f_htmlFile').value = ''; el('f_cohortTagFile').value = '';
     setHtmlStatus();
-    fields.techStack.value = ''; fields.hardProblem.value = ''; fields.creativeTwist.value = ''; fields.liveLink.value = '';
+    fields.techStack.value = ''; fields.hardProblem.value = ''; fields.creativeTwist.value = ''; fields.liveLink.value = ''; fields.demoLink.value = '';
   }
 
   function openModal(id) {
@@ -3324,7 +3346,7 @@ const Fireworks = (() => {
       el('f_cohortTagPreview').innerHTML = pendingCohortTag ? `<img src="${pendingCohortTag}" style="width:100%;height:100%;object-fit:cover;">` : '&#127991;';
       setHtmlStatus();
       fields.techStack.value = (p.techStack || []).join(', '); fields.hardProblem.value = p.hardProblem || '';
-      fields.creativeTwist.value = p.creativeTwist || ''; fields.liveLink.value = p.liveLink || '';
+      fields.creativeTwist.value = p.creativeTwist || ''; fields.liveLink.value = p.liveLink || ''; fields.demoLink.value = p.demoLink || '';
     } else {
       modalTitle.textContent = 'Add project';
       clearForm();
@@ -3350,6 +3372,7 @@ const Fireworks = (() => {
       cohortTag: pendingCohortTag,
       techStack: fields.techStack.value.split(',').map(s => s.trim()).filter(Boolean),
       hardProblem: fields.hardProblem.value.trim(), creativeTwist: fields.creativeTwist.value.trim(), liveLink: fields.liveLink.value.trim(),
+      demoLink: fields.demoLink.value.trim(),
     };
     if (editingId) { await Store.updateProject(editingId, data); showToast('Project updated.'); }
     else {

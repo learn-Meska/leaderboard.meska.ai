@@ -84,8 +84,12 @@ create table if not exists public.settings (
   results_revealed    boolean not null default false,
   rules_note          text not null default 'One vote per person, per category. You can change your vote any time before voting closes.',
   event_name          text not null default 'Claude Course for Professionals — Cohort Awards',
+  -- Which course cohorts are currently open to voters. Empty = no
+  -- restriction, every approved project is votable (today's behavior).
+  open_cohorts        jsonb not null default '[]'::jsonb,
   constraint settings_single_row check (id)
 );
+alter table public.settings add column if not exists open_cohorts jsonb not null default '[]'::jsonb;
 insert into public.settings (id) values (true) on conflict (id) do nothing;
 
 alter table public.settings enable row level security;
@@ -114,6 +118,7 @@ create table if not exists public.projects (
   cohort_tag     text,
   project_html   text,
   project_url    text,
+  demo_link      text,
   screenshot     text,
   tech_stack     jsonb not null default '[]'::jsonb,
   hard_problem   text,
@@ -126,9 +131,12 @@ create table if not exists public.projects (
   created_at     timestamptz not null default now()
 );
 -- Upgrade path for an already-created table (this create is a no-op there).
--- Admin-only classification, never shown on the public voter card.
+-- course_name / cohort_tag are admin-only classification, never shown on
+-- the public voter card. demo_link is a YouTube/Drive/Vimeo/Loom URL,
+-- embedded via the videoEmbed()/videoMeta() render helpers.
 alter table public.projects add column if not exists course_name text;
 alter table public.projects add column if not exists cohort_tag text;
+alter table public.projects add column if not exists demo_link text;
 alter table public.projects enable row level security;
 
 -- Voters only ever see approved projects.
