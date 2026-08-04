@@ -7,7 +7,7 @@ Target address: **leaderboard.meska.ai**
 
 | File | What it is |
 |---|---|
-| `meska-leaderboard-live.html` | **The real build.** Connected to Supabase. This is what gets deployed. |
+| `index.html` | **The real build.** Connected to Supabase. This is what gets deployed — the name makes it the site root. |
 | `meska-leaderboard-schema-v2.sql` | Database schema — tables, row-level security, safe aggregates. Already applied. |
 | `project-khatba.html` | Khatba project page, with its metadata block. Uploaded through the admin panel. |
 | `khatba-screenshot.png` | Thumbnail image for Khatba. |

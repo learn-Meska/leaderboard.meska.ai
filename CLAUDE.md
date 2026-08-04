@@ -16,7 +16,7 @@ dependencies are the Google Fonts stylesheet and the Supabase JS CDN bundle.
 
 | File | Role |
 |---|---|
-| `meska-leaderboard-live.html` | **The real build.** Supabase-backed. The only file to change for product work. |
+| `index.html` | **The real build.** Supabase-backed. Named `index.html` so it serves as the site root. The only file to change for product work. |
 | `meska-leaderboard-schema-v2.sql` | Live schema — tables, RLS, triggers, safe-aggregate RPCs. Already applied. Idempotent. |
 | `project-khatba.html` | Example participant project page with its `meska-project-meta` block. |
 | `meska-project-page/` | Skill that generates those project pages from a live app URL. |
@@ -37,7 +37,7 @@ Supabase auth needs an http origin, so serve rather than opening from `file://`:
 python3 -m http.server 8000
 ```
 
-Then load `http://localhost:8000/meska-leaderboard-live.html`. Verification is manual: check the browser
+Then load `http://localhost:8000/`. Verification is manual: check the browser
 console, walk the affected view, and confirm at desktop width and ~700px. `Store.lastError()` surfaces the
 last Supabase failure, and `Store` is a live handle in the console — `Store.getApprovedProjects()`,
 `Store.tally('roi')`, `Store.getSettings()` answer most questions faster than reading the DOM.
