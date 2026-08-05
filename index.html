@@ -2145,6 +2145,7 @@ function renderCard(project) {
             ? `<button type="button" class="btn btn-primary" data-open="${escapeHtml(p.id)}">Open the full project ↗</button>`
             : `<div class="field-value" style="color:var(--muted-2)">Project page not submitted yet</div>`}
         </div>
+        ${videoMeta(p.demoLink) ? `<div class="field"><div class="field-label">Demo Video</div>${renderVideoThumb(p)}</div>` : ''}
         <div class="field"><div class="field-label">Problem Statement</div><div class="field-value">${escapeHtml(p.problem)}</div></div>
         <div class="field"><div class="field-label">Solution Overview</div><div class="field-value">${escapeHtml(p.solution)}</div></div>
         <div class="field"><div class="field-label">The Creative Twist</div><div class="field-value">${escapeHtml(p.creativeTwist)}</div></div>
@@ -2153,7 +2154,6 @@ function renderCard(project) {
         <div class="field"><div class="field-label">Impact / ROI Note</div><div class="stat-value">${escapeHtml(p.impact)}</div></div>
         <div class="field"><div class="field-label">Tech Stack &amp; Hard Problem Solved</div>${renderTechPills(p)}<div class="field-value" style="margin-top:8px;">${escapeHtml(p.hardProblem)}</div></div>
         <div class="field"><div class="field-label">Live Link / Repo</div><div class="field-value strong">${safeUrl(p.liveLink) ? `<a href="${escapeHtml(safeUrl(p.liveLink))}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.liveLink)} ↗</a>` : '<span style="color:var(--muted-2); font-weight:300;">Not provided</span>'}</div></div>
-        ${videoMeta(p.demoLink) ? `<div class="field"><div class="field-label">Demo Video</div>${renderVideoThumb(p)}</div>` : ''}
         ${(p.demoShots || []).length ? `<div class="field"><div class="field-label">Screenshots</div><div class="demo-shots">${p.demoShots.slice(0,5).map(s => `<div class="shot-ph">${escapeHtml(s)}</div>`).join('')}</div></div>` : ''}
       </div>
     </div>
