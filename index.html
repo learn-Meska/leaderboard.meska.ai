@@ -900,8 +900,8 @@ h1, h2, h3, h4 {
     <div class="container">
       <div class="kicker" style="margin-bottom:16px;">Final Project · Idea Voting</div>
       <h1>AI Copilot Diploma</h1>
-      <p class="lead" style="font-size:20px; font-weight:400; color:#fff; margin-top:2px;">Vote for the idea your cohort should build</p>
-      <p class="lead">Every idea below is a candidate final project. Vote for the one you think your cohort should build and present at the graduation day — one vote, changeable any time before voting closes.</p>
+      <p class="lead" style="font-size:20px; font-weight:400; color:#fff; margin-top:2px;">Vote for the ideas your cohort should build</p>
+      <p class="lead">Every idea below is a candidate final project. Vote for as many as you'd like to see built — one vote per idea, toggle any time before voting closes.</p>
     </div>
   </section>
 
@@ -909,7 +909,7 @@ h1, h2, h3, h4 {
     <section style="margin-top:-26px; position:relative; z-index:2;">
       <div class="rules-strip">
         <span class="vote-counter">🗳️ <b id="diplomaVoteCount">0</b> votes cast so far</span>
-        <span id="diplomaRulesNoteText"><b>Rule:</b> one vote per person. You can change your vote any time before voting closes.</span>
+        <span id="diplomaRulesNoteText"><b>Rule:</b> vote for as many ideas as you'd like to support, one vote per idea. Toggle any time before voting closes.</span>
         <div class="field" style="margin-left:auto; min-width:200px;">
           <select id="diplomaCohortFilter" class="text-input" style="font-size:13px; padding:7px 10px;">
             <option value="">All cohorts</option>
@@ -1023,9 +1023,9 @@ h1, h2, h3, h4 {
 <section class="view" id="view-about">
   <section class="hero" style="padding:36px 0 30px;">
     <div class="container">
-      <div class="kicker" style="margin-bottom:10px;">How It Works · Cohort Awards</div>
+      <div class="kicker" style="margin-bottom:10px;">How It Works</div>
       <h1 style="font-size:28px;">About This Leaderboard</h1>
-      <p class="lead" style="margin-top:6px;">What this project is, how the standard card works, and exactly how voting and the live results screen are meant to run.</p>
+      <p class="lead" style="margin-top:6px;">Two separate voting tracks share this site — Claude Course for Professionals, and the AI Copilot Diploma. They run independently: different projects, different vote rules, different leaderboards.</p>
     </div>
   </section>
 
@@ -1034,7 +1034,27 @@ h1, h2, h3, h4 {
 
       <div class="about-block">
         <div class="band">
-          <div class="kicker">Overview</div>
+          <div class="kicker">Two Tracks</div>
+          <h2>Which one am I voting in?</h2>
+          <p>Check the nav bar — each track has its own Vote page and its own Leaderboard.</p>
+        </div>
+        <div class="two-col">
+          <div style="padding:20px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); box-shadow:var(--shadow-card);">
+            <h4 style="margin-bottom:6px;">🏆 Claude Vote</h4>
+            <p style="font-size:13.5px; color:var(--muted); margin-bottom:10px;">Claude Course for Professionals — final projects, judged by the cohort across four fixed awards: Best ROI, Best Technical, Best Creative, Cohort Choice.</p>
+            <p style="font-size:12.5px; color:var(--muted-2); margin-bottom:0;">One vote per person, per award. Results stay hidden until the closing ceremony reveal.</p>
+          </div>
+          <div style="padding:20px; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); box-shadow:var(--shadow-card);">
+            <h4 style="margin-bottom:6px;">💡 AI Copilot Diploma Vote</h4>
+            <p style="font-size:13.5px; color:var(--muted); margin-bottom:10px;">AI Copilot Diploma, Online and Offline — participants pitch project <em>ideas</em>, and the cohort votes for the one it should actually build and present at graduation.</p>
+            <p style="font-size:12.5px; color:var(--muted-2); margin-bottom:0;">Vote for as many ideas as you want to support — one vote per idea, toggle any time before voting closes. The top 10 ideas per delivery mode become the official final projects.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-block">
+        <div class="band">
+          <div class="kicker">Claude Course</div>
           <h2>Four Awards, One Public Vote</h2>
           <p>Every project is judged by the cohort itself, on the same information, across four categories.</p>
         </div>
@@ -1070,7 +1090,7 @@ h1, h2, h3, h4 {
 
       <div class="about-block">
         <div class="band">
-          <div class="kicker">Section 02</div>
+          <div class="kicker">Section 02 · Claude Course</div>
           <h2>Voting Mechanics</h2>
           <p>One card, four vote buttons, real-time tally.</p>
         </div>
@@ -1091,19 +1111,39 @@ h1, h2, h3, h4 {
         <div class="callout"><strong>Cohort Choice eligibility:</strong> unlike the other three awards, Cohort Choice is limited to a specific roster (managed in Admin — typically the cohort itself). The first time someone votes in that category, they pick their name from the roster; it's then remembered on their device. Best ROI, Best Technical, and Best Creative stay open to anyone.</div>
       </div>
 
+      <div class="about-block">
+        <div class="band">
+          <div class="kicker">Section 03 · AI Copilot Diploma</div>
+          <h2>Idea Voting</h2>
+          <p>One card per idea, a vote button on each, and the winners become the cohort's real final projects.</p>
+        </div>
+        <div class="rules-table-wrap">
+          <table class="rules-table">
+            <thead><tr><th>Rule</th><th>How it works</th></tr></thead>
+            <tbody>
+              <tr><td>Votes per person</td><td>Vote for as many ideas as you want to support — one vote per idea, not one per category. Toggle any idea on or off any time before voting closes.</td></tr>
+              <tr><td>What wins</td><td>The 10 highest-voted ideas <em>per delivery mode</em> (Online and Offline are ranked separately) become that cohort's official final projects for the graduation day.</td></tr>
+              <tr><td>Who's votable</td><td>An admin opens specific cohort intakes for voting — e.g. "Wave 14" or "Online 9" — and only ideas from an open cohort appear. You can browse and filter by cohort, but you can only vote among ideas that are currently open.</td></tr>
+              <tr><td>Results</td><td>Sealed the same way as Claude's — rankings stay hidden until an admin reveals them, enforced at the database, not just hidden in the page.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><strong>Why multi-vote:</strong> this track isn't judging finished work across categories — it's gauging which ideas the cohort actually wants to build. Letting people back several ideas, not just one, surfaces genuine support rather than forcing an artificial single choice.</div>
+      </div>
+
       <div class="about-block" style="margin-bottom:0;">
         <div class="band">
-          <div class="kicker">Section 03</div>
+          <div class="kicker">Section 04</div>
           <h2>Live Leaderboard Display</h2>
-          <p>A shared results screen that updates as votes come in.</p>
+          <p>A shared results screen for each track that updates as votes come in.</p>
         </div>
         <div class="two-col">
           <div>
             <h4>What It Shows</h4>
             <ul>
-              <li>All projects, ranked live within each of the 4 categories</li>
-              <li>Vote counts updating in real time as the cohort votes</li>
-              <li>A clean "reveal" view for the closing ceremony, projected on screen</li>
+              <li>Claude Leaderboard: all projects, ranked live within each of the 4 awards</li>
+              <li>AI Copilot Diploma Leaderboard: Online and Offline ranked separately, top 10 each, shown together on one page</li>
+              <li>A clean "reveal" view for the Claude closing ceremony, projected on screen</li>
             </ul>
           </div>
           <div>
@@ -1115,12 +1155,13 @@ h1, h2, h3, h4 {
             </ul>
           </div>
         </div>
-        <div class="callout"><strong>Approval step:</strong> every project is added by an admin and starts as <em>Pending review</em>. It only becomes visible to voters — and only counts on the leaderboard — once an admin approves it. That's the checkpoint for reviewing each participant's demo video before the cohort sees it.</div>
+        <div class="callout"><strong>Approval step:</strong> every project is added by an admin and starts as <em>Pending review</em>. It only becomes visible to voters — and only counts on either leaderboard — once an admin approves it. That's the checkpoint for reviewing each submission before the cohort sees it.</div>
+        <div class="callout"><strong>Independent tracks:</strong> opening, closing, and revealing Claude never affects the AI Copilot Diploma track, or the other way around — each has its own switches in Admin.</div>
         <div class="flow-steps">
-          <div class="flow-step"><div class="flow-label">Before</div><p>Admin adds each project, reviews the demo video, and approves it</p></div>
-          <div class="flow-step"><div class="flow-label">During demos</div><p>Voting opens; leaderboard updates live on the shared screen</p></div>
-          <div class="flow-step"><div class="flow-label">After demos</div><p>Voting window closes</p></div>
-          <div class="flow-step"><div class="flow-label">Ceremony</div><p>Reveal the 4 winners on the leaderboard screen</p></div>
+          <div class="flow-step"><div class="flow-label">Before</div><p>Admin adds each project, reviews it, and approves it</p></div>
+          <div class="flow-step"><div class="flow-label">During demos</div><p>Voting opens; both leaderboards update live on the shared screen</p></div>
+          <div class="flow-step"><div class="flow-label">After demos</div><p>Voting window closes, per track</p></div>
+          <div class="flow-step"><div class="flow-label">Ceremony</div><p>Reveal the Claude winners and the Diploma top 10</p></div>
         </div>
       </div>
 
@@ -1327,7 +1368,7 @@ h1, h2, h3, h4 {
         </div>
         <div class="report-wrap">
           <table class="report-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Course</th><th>Cohort</th><th>💡 Idea voted for</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Course</th><th>Cohort</th><th>💡 Ideas voted for</th></tr></thead>
             <tbody id="diplomaVotersBody"></tbody>
           </table>
         </div>
@@ -1705,7 +1746,8 @@ const Store = (() => {
   let _settingsByTrack = {};
   let _roster = [];
   let _users = [];                 // admin only
-  let _myVotes = {};               // { category: projectId }
+  let _myVotes = {};               // { category: projectId } — exclusive categories only
+  let _myIdeaVotes = new Set();    // project ids — 'idea' is multi-select
   let _totals = {};                // { category: count }
   let _standings = {};             // { projectId: { category: count } } — post-reveal / admin
   let _allVotes = [];              // admin only, for the reports
@@ -1769,10 +1811,13 @@ const Store = (() => {
     } : null;
   }
   async function loadMyVotes() {
-    _myVotes = {};
+    _myVotes = {}; _myIdeaVotes = new Set();
     if (!_session) return;
     const { data } = await sb.from('votes').select('category,project_id').eq('voter_id', _session.user.id);
-    (data || []).forEach(v => { _myVotes[v.category] = v.project_id; });
+    (data || []).forEach(v => {
+      if (v.category === 'idea') _myIdeaVotes.add(v.project_id);
+      else _myVotes[v.category] = v.project_id;
+    });
   }
   async function loadTotals() {
     const { data, error } = await sb.rpc('vote_totals');
@@ -1858,7 +1903,7 @@ const Store = (() => {
   async function logout() {
     await sb.auth.signOut();
     _session = null; _profile = null; _isCohort = false;
-    _myVotes = {}; _users = []; _roster = []; _allVotes = []; _standings = {};
+    _myVotes = {}; _myIdeaVotes = new Set(); _users = []; _roster = []; _allVotes = []; _standings = {};
     await refreshAll();
   }
 
@@ -1890,6 +1935,8 @@ const Store = (() => {
     return _projects.filter(p => (p.submittedBy || '').toLowerCase() === u.email.toLowerCase());
   };
   const myVoteFor = (category) => _myVotes[category] || null;
+  const hasIdeaVote = (projectId) => _myIdeaVotes.has(projectId);
+  const myIdeaVotes = () => [..._myIdeaVotes];
   // Empty until results are revealed — the board renders its locked state.
   const tally = (category) => {
     const out = {};
@@ -1926,14 +1973,35 @@ const Store = (() => {
   async function castVote(category, projectId) {
     if (!_session) throw new Error('not_logged_in');
     const uid = _session.user.id;
-    if (_myVotes[category] === projectId) {
-      const { error } = await sb.from('votes').delete().eq('category', category).eq('voter_id', uid);
-      if (error) throw error;
+
+    if (category === 'idea') {
+      // Multi-select: each project is toggled independently — a voter can
+      // support as many ideas as they like, one vote each.
+      if (_myIdeaVotes.has(projectId)) {
+        const { error } = await sb.from('votes').delete()
+          .eq('category', 'idea').eq('voter_id', uid).eq('project_id', projectId);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('votes')
+          .insert({ category: 'idea', project_id: projectId, voter_id: uid });
+        if (error) throw new Error(error.message || 'vote_failed');
+      }
     } else {
-      const { error } = await sb.from('votes')
-        .upsert({ category, project_id: projectId, voter_id: uid }, { onConflict: 'category,voter_id' });
-      if (error) throw new Error(error.message || 'vote_failed');
+      // Exclusive: at most one project per category. No upsert here —
+      // the categories differ in whether a voter may hold one row or many,
+      // and a plain insert/delete pair works the same way for both without
+      // needing an upsert conflict target that matches every case.
+      if (_myVotes[category] === projectId) {
+        const { error } = await sb.from('votes').delete().eq('category', category).eq('voter_id', uid);
+        if (error) throw error;
+      } else {
+        await sb.from('votes').delete().eq('category', category).eq('voter_id', uid);
+        const { error } = await sb.from('votes')
+          .insert({ category, project_id: projectId, voter_id: uid });
+        if (error) throw new Error(error.message || 'vote_failed');
+      }
     }
+
     await Promise.all([loadMyVotes(), loadTotals(), loadStandings()]);
     if (isAdmin()) await loadAdminData();
     notify();
@@ -2097,7 +2165,7 @@ const Store = (() => {
     CATEGORIES, IDEA_CATEGORY, TRACK_COURSES, ready, lastError,
     getProjects, getApprovedProjects, getVotableProjects, getPendingProjects, myProjects,
     addProject, updateProject, removeProject, setProjectStatus, rejectProject, submitProject,
-    getVotes, getVoteLog, votesPerDay, myVoteFor, castVote, tally,
+    getVotes, getVoteLog, votesPerDay, myVoteFor, hasIdeaVote, myIdeaVotes, castVote, tally,
     countsPerCategory, totalVotesCast, distinctVoters, resetVotes,
     getSettings, saveSettings,
     getRoster, saveRoster, removeFromRoster, canVoteCohort, canSubmit,
@@ -2389,7 +2457,7 @@ function renderCard(project) {
    project is doing. Counts live on the Reveal screen and in Admin only. */
 function renderVotePills(project, cats = Store.CATEGORIES) {
   return cats.map(cat => {
-    const isActive = Store.myVoteFor(cat.id) === project.id;
+    const isActive = cat.id === 'idea' ? Store.hasIdeaVote(project.id) : Store.myVoteFor(cat.id) === project.id;
     return `<button class="vote-pill ${isActive ? 'active' : ''}" data-category="${cat.id}" data-project="${project.id}">
       <span class="label">${cat.label}</span><span class="count">${isActive ? 'Your vote' : 'Vote'}</span>
     </button>`;
@@ -2985,7 +3053,7 @@ const Auth = (() => {
     const ordered = orderProjects(pool);
     if (!ordered.length) { grid.innerHTML = ''; emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
-    grid.innerHTML = ordered.map(p => renderDiplomaTile(p, Store.myVoteFor('idea') === p.id)).join('');
+    grid.innerHTML = ordered.map(p => renderDiplomaTile(p, Store.hasIdeaVote(p.id))).join('');
 
     grid.querySelectorAll('.ptile').forEach(tile => {
       const open = () => showDetail(tile.dataset.projectId);
@@ -3041,7 +3109,7 @@ const Auth = (() => {
     if (!Store.isLoggedIn()) { Auth.openModal({ tab: 'register', onSuccess: () => btn.click() }); return; }
 
     const project = votablePool().find(p => p.id === projectId);
-    const wasActive = Store.myVoteFor('idea') === projectId;
+    const wasActive = Store.hasIdeaVote(projectId);
     try {
       await Store.castVote('idea', projectId);
       showToast(wasActive ? 'Vote removed.' : `Voted for ${project ? project.name : 'this idea'}.`);
@@ -4056,16 +4124,20 @@ const Fireworks = (() => {
       </tr>`).join('');
   }
 
+  // A voter can back several ideas now, not just one — group the flat vote
+  // log by voter and list everything they voted for.
   function diplomaVoterRows() {
+    const log = Store.getVoteLog().filter(v => v.category === 'idea');
     return Store.getUsers().map(u => {
-      const pid = (Store.getVotes()['idea'] || {})[u.id];
-      const project = pid ? Store.getProjects().find(p => p.id === pid) : null;
+      const picks = log.filter(v => v.voter === u.id)
+        .map(v => Store.getProjects().find(p => p.id === v.projectId))
+        .filter(Boolean);
       return {
         u,
-        voted: !!project,
-        ideaName: project ? project.name : '',
-        courseName: project ? project.courseName : '',
-        cohortTag: project ? project.cohortTag : '',
+        voted: picks.length > 0,
+        ideaNames: picks.map(p => p.name),
+        courses: [...new Set(picks.map(p => p.courseName).filter(Boolean))],
+        cohorts: [...new Set(picks.map(p => p.cohortTag).filter(Boolean))],
       };
     });
   }
@@ -4078,15 +4150,15 @@ const Fireworks = (() => {
       diplomaVotersBody.innerHTML = '<tr><td colspan="6" class="report-empty">Nobody has registered yet.</td></tr>';
       return;
     }
-    const cell = (v) => v ? escapeHtml(v) : '<span class="none">—</span>';
+    const cell = (list) => list.length ? escapeHtml(list.join(', ')) : '<span class="none">—</span>';
     diplomaVotersBody.innerHTML = rows.map(r => `
       <tr>
         <td class="num">${escapeHtml(r.u.name)}</td>
         <td>${escapeHtml(r.u.email)}</td>
         <td>${escapeHtml(r.u.mobile || '')}</td>
-        <td>${cell(r.courseName)}</td>
-        <td>${cell(r.cohortTag)}</td>
-        <td>${cell(r.ideaName)}</td>
+        <td>${cell(r.courses)}</td>
+        <td>${cell(r.cohorts)}</td>
+        <td>${cell(r.ideaNames)}</td>
       </tr>`).join('');
   }
 
@@ -4136,8 +4208,8 @@ const Fireworks = (() => {
   });
 
   exportDiplomaVotersBtn.addEventListener('click', () => {
-    const rows = [['Name','Email','Mobile','Course','Cohort','Idea voted for']];
-    diplomaVoterRows().forEach(r => rows.push([r.u.name, r.u.email, r.u.mobile || '', r.courseName, r.cohortTag, r.ideaName]));
+    const rows = [['Name','Email','Mobile','Course','Cohort','Ideas voted for']];
+    diplomaVoterRows().forEach(r => rows.push([r.u.name, r.u.email, r.u.mobile || '', r.courses.join('; '), r.cohorts.join('; '), r.ideaNames.join('; ')]));
     downloadCsv('meska-diploma-votes-by-voter.csv', rows);
   });
 

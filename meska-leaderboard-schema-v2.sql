@@ -177,7 +177,7 @@ alter table public.settings add column if not exists open_courses jsonb not null
 insert into public.settings (track) values ('claude') on conflict (track) do nothing;
 insert into public.settings (track, voting_open, rules_note, event_name)
 values ('diploma', false,
-        'One vote for your favorite idea. You can change your vote any time before voting closes.',
+        'Vote for as many ideas as you want to support, one vote per idea. You can toggle any idea on or off any time before voting closes.',
         'AI Copilot Diploma — Idea Voting')
 on conflict (track) do nothing;
 
@@ -267,20 +267,31 @@ create policy "admins write projects" on public.projects
 
 
 -- ---------- 5. VOTES ----------
--- The UNIQUE constraint IS the "one vote per person per category" rule.
--- 'idea' is the Diploma page's single vote — the same UNIQUE constraint
--- gives it "one idea vote per voter, changeable" for free.
+-- Two different uniqueness rules share this table. roi/technical/creative/
+-- cohort are exclusive — at most one project per category per voter, via
+-- a partial unique index that excludes 'idea'. 'idea' (the Diploma page)
+-- is multi-select — a voter may vote once per project, for as many
+-- projects as they like — via a separate partial index keyed on project
+-- too. Because one of these is a partial index, the app can't rely on
+-- Postgres upsert-on-conflict to pick the right arbiter automatically, so
+-- castVote() in the client does explicit delete-then-insert instead of
+-- upsert for both cases.
 create table if not exists public.votes (
   id          uuid primary key default gen_random_uuid(),
   category    text not null check (category in ('roi','technical','creative','cohort','idea')),
   project_id  uuid not null references public.projects(id) on delete cascade,
   voter_id    uuid not null references auth.users(id) on delete cascade,
-  created_at  timestamptz not null default now(),
-  unique (category, voter_id)
+  created_at  timestamptz not null default now()
 );
 alter table public.votes drop constraint if exists votes_category_check;
 alter table public.votes add constraint votes_category_check
   check (category in ('roi','technical','creative','cohort','idea'));
+-- Upgrade path: drop the old blanket constraint from a pre-Diploma install.
+alter table public.votes drop constraint if exists votes_category_voter_id_key;
+create unique index if not exists votes_one_per_category
+  on public.votes(category, voter_id) where category <> 'idea';
+create unique index if not exists votes_one_per_idea_project
+  on public.votes(category, project_id, voter_id) where category = 'idea';
 alter table public.votes enable row level security;
 
 -- Nobody reads raw votes except their own — this is what keeps the
