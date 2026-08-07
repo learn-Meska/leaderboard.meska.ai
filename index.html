@@ -910,9 +910,10 @@ h1, h2, h3, h4 {
       <div class="rules-strip">
         <span class="vote-counter">🗳️ <b id="diplomaVoteCount">0</b> votes cast so far</span>
         <span id="diplomaRulesNoteText"><b>Rule:</b> vote for as many ideas as you'd like to support, one vote per idea. Toggle any time before voting closes.</span>
-        <div class="field" style="margin-left:auto; min-width:200px;">
+        <div class="field" style="margin-left:auto; min-width:220px;">
+          <div style="font-size:11px; font-weight:600; color:var(--muted); margin-bottom:3px;">Select your cohort to vote 👇</div>
           <select id="diplomaCohortFilter" class="text-input" style="font-size:13px; padding:7px 10px;">
-            <option value="">All cohorts</option>
+            <option value="">— Select your cohort to vote —</option>
           </select>
         </div>
       </div>
@@ -1124,12 +1125,13 @@ h1, h2, h3, h4 {
             <tbody>
               <tr><td>Votes per person</td><td>Vote for as many ideas as you want to support — one vote per idea, not one per category. Toggle any idea on or off any time before voting closes.</td></tr>
               <tr><td>What wins</td><td>The 10 highest-voted ideas <em>per delivery mode</em> (Online and Offline are ranked separately) become that cohort's official final projects for the graduation day.</td></tr>
-              <tr><td>Who's votable</td><td>An admin opens specific cohort intakes for voting — e.g. "Wave 14" or "Online 9" — and only ideas from an open cohort appear. You can browse and filter by cohort, but you can only vote among ideas that are currently open.</td></tr>
-              <tr><td>Results</td><td>Sealed the same way as Claude's — rankings stay hidden until an admin reveals them, enforced at the database, not just hidden in the page.</td></tr>
+              <tr><td>Who's votable</td><td>An admin opens specific cohort intakes for voting — e.g. "Wave 14" or "Online 9" — and only ideas from an open cohort appear. You can browse freely, but the vote buttons stay disabled until you pick your own cohort from the filter dropdown.</td></tr>
+              <tr><td>Results</td><td>Online and Offline are revealed independently — an admin can publish one delivery mode's rankings while the other stays sealed. Enforced at the database, not just hidden in the page.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout"><strong>Why multi-vote:</strong> this track isn't judging finished work across categories — it's gauging which ideas the cohort actually wants to build. Letting people back several ideas, not just one, surfaces genuine support rather than forcing an artificial single choice.</div>
+        <div class="callout"><strong>Why the cohort filter is mandatory:</strong> the vote buttons don't activate until you select your own cohort — that's what keeps a Wave 14 voter from accidentally voting on Online 9's ideas, or the reverse.</div>
       </div>
 
       <div class="about-block" style="margin-bottom:0;">
@@ -1432,8 +1434,9 @@ h1, h2, h3, h4 {
         </div>
         <div class="admin-settings-grid">
           <label class="toggle-row"><input type="checkbox" id="setVotingOpenDiploma"><span>Voting is open</span></label>
-          <label class="toggle-row"><input type="checkbox" id="setResultsRevealedDiploma"><span>Reveal results publicly <em>(off = voters see only the total vote count, never idea rankings)</em></span></label>
           <label class="toggle-row"><input type="checkbox" id="setSelfVotingDiploma"><span>Allow self-voting <em>(not enforced automatically — state the rule to the cohort)</em></span></label>
+          <label class="toggle-row"><input type="checkbox" id="setRevealedOnlineDiploma"><span>Reveal Online results <em>(off = voters see only the total vote count, never idea rankings)</em></span></label>
+          <label class="toggle-row"><input type="checkbox" id="setRevealedOfflineDiploma"><span>Reveal Offline results <em>(independent of Online — reveal either or both)</em></span></label>
           <div class="field" style="grid-column:1/-1;">
             <div class="field-label">Open for voting — courses <span style="text-transform:none;letter-spacing:0;color:var(--muted-2)">(none checked = both Online and Offline are votable)</span></div>
             <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;">
@@ -1733,7 +1736,8 @@ const Store = (() => {
     diploma: ['AI Copilot Diploma-Offline', 'AI Copilot Diploma-Online'],
   };
   const DEFAULT_TRACK_SETTINGS = { votingOpen: false, requireViewAll: false, selfVotingAllowed: false,
-                    resultsRevealed: false, rulesNote: '', eventName: '', openCohorts: [], openCourses: [] };
+                    resultsRevealed: false, rulesNote: '', eventName: '', openCohorts: [], openCourses: [],
+                    revealedOnline: false, revealedOffline: false };
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true },
@@ -1789,6 +1793,8 @@ const Store = (() => {
     selfVotingAllowed: r.self_voting_allowed, resultsRevealed: r.results_revealed,
     rulesNote: r.rules_note, eventName: r.event_name, openCohorts: r.open_cohorts || [],
     openCourses: r.open_courses || [],
+    // Diploma only — Online and Offline are revealed independently.
+    revealedOnline: !!r.revealed_online, revealedOffline: !!r.revealed_offline,
   });
 
   /* ---------- fetchers ---------- */
@@ -2048,6 +2054,7 @@ const Store = (() => {
       self_voting_allowed: s.selfVotingAllowed, results_revealed: s.resultsRevealed,
       rules_note: s.rulesNote, event_name: s.eventName, open_cohorts: s.openCohorts || [],
       open_courses: s.openCourses || [],
+      revealed_online: !!s.revealedOnline, revealed_offline: !!s.revealedOffline,
     }).eq('track', track);
     if (error) throw error;
     await Promise.all([loadSettings(), loadStandings()]);
@@ -2625,8 +2632,11 @@ const Auth = (() => {
     if (navClaudeBoardBtn) navClaudeBoardBtn.style.display =
       (Store.getSettings('claude').resultsRevealed || Store.isAdmin()) ? '' : 'none';
     const navDiplomaBoardBtn = document.getElementById('navDiplomaBoardBtn');
-    if (navDiplomaBoardBtn) navDiplomaBoardBtn.style.display =
-      (Store.getSettings('diploma').resultsRevealed || Store.isAdmin()) ? '' : 'none';
+    if (navDiplomaBoardBtn) {
+      const ds = Store.getSettings('diploma');
+      navDiplomaBoardBtn.style.display =
+        (ds.revealedOnline || ds.revealedOffline || Store.isAdmin()) ? '' : 'none';
+    }
 
     const submitLocked = document.getElementById('submitLocked');
     const submitContent = document.getElementById('submitContent');
@@ -3029,12 +3039,15 @@ const Auth = (() => {
   function refreshCohortFilterOptions() {
     const tags = [...new Set(votablePool().map(p => p.cohortTag).filter(Boolean))].sort();
     const prev = cohortFilter.value;
-    cohortFilter.innerHTML = `<option value="">All cohorts</option>` +
+    cohortFilter.innerHTML = `<option value="">— Select your cohort to vote —</option>` +
       tags.map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`).join('');
     if (tags.includes(prev)) cohortFilter.value = prev;
     else filterTag = '';
   }
-  cohortFilter.addEventListener('change', () => { filterTag = cohortFilter.value; renderGrid(); });
+  cohortFilter.addEventListener('change', () => {
+    filterTag = cohortFilter.value;
+    if (!openProjectId) renderGrid(); else refreshVoteButtons();
+  });
 
   function renderDiplomaTile(project, voted) {
     const p = project;
@@ -3105,7 +3118,8 @@ const Auth = (() => {
       if (!project) return;
       row.innerHTML = renderVotePills(project, [Store.IDEA_CATEGORY]);
       row.querySelectorAll('.vote-pill').forEach(btn => {
-        btn.disabled = loggedIn && !settings.votingOpen;
+        btn.disabled = loggedIn && (!settings.votingOpen || !filterTag);
+        if (loggedIn && !filterTag) btn.title = 'Select your cohort from the filter above first.';
         btn.addEventListener('click', onVoteClick);
       });
     });
@@ -3118,6 +3132,7 @@ const Auth = (() => {
 
     if (!settings.votingOpen) { showToast('Voting is closed.'); return; }
     if (!Store.isLoggedIn()) { Auth.openModal({ tab: 'register', onSuccess: () => btn.click() }); return; }
+    if (!filterTag) { showToast('Select your cohort from the filter above before voting.'); return; }
 
     const project = votablePool().find(p => p.id === projectId);
     const wasActive = Store.hasIdeaVote(projectId);
@@ -3463,7 +3478,18 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
       .slice(0, 10);
   }
 
-  function renderPanel(title, courseName, projects) {
+  // Online and Offline are revealed independently, so each panel renders
+  // its own locked / admin-preview / real state rather than gating the
+  // whole board on one flag.
+  function renderPanel(title, courseName, projects, opts = {}) {
+    if (opts.locked) {
+      return `<div class="board-col board-locked">
+        <div class="board-col-head" style="margin-bottom:14px;">${title}</div>
+        <div class="lock-icon" style="font-size:26px;">&#128274;</div>
+        <div class="lock-title" style="font-size:15px;">Results are locked</div>
+        <div class="lock-sub">Stays hidden until an organizer reveals this delivery mode.</div>
+      </div>`;
+    }
     const rows = rankedFor(courseName, projects);
     const maxCount = Math.max(1, rows[0] ? rows[0].count : 0);
     const rowsHtml = rows.map((r, i) => `
@@ -3477,7 +3503,9 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
         </div>
         <div class="board-count">${r.count}</div>
       </div>`).join('');
-    return `<div class="board-col"><div class="board-col-head">${title}</div>${rowsHtml || '<div class="board-empty-row">No votes yet</div>'}</div>`;
+    const preview = opts.adminPreview
+      ? '<div class="admin-preview-note" style="margin-bottom:10px;">👁 Admin preview — voters still see this locked</div>' : '';
+    return `<div class="board-col"><div class="board-col-head">${title}</div>${preview}${rowsHtml || '<div class="board-empty-row">No votes yet</div>'}</div>`;
   }
 
   function renderDiplomaBoard() {
@@ -3490,31 +3518,20 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
     empty.style.display = 'none';
 
     const settings = Store.getSettings('diploma');
-    const revealed = !!settings.resultsRevealed;
-    const adminPreview = !revealed && Store.isAdmin();
-    if (!revealed && !adminPreview) {
-      grid.innerHTML = `
-        <div class="board-col board-locked" style="grid-column:1/-1;">
-          <div class="lock-icon">&#128274;</div>
-          <div class="lock-title">Results are locked</div>
-          <div class="lock-sub">Idea rankings stay hidden until an organizer reveals them.</div>
-          <div class="lock-hint">Organizers: log in as an admin and flip <b>Reveal results publicly</b> under AI Copilot Diploma settings.</div>
-        </div>`;
-      FireworksDiploma.stop();
-      return;
-    }
+    const isAdmin = Store.isAdmin();
+    const onlineRevealed = !!settings.revealedOnline;
+    const offlineRevealed = !!settings.revealedOffline;
 
     grid.innerHTML =
-      renderPanel('🟢 AI Copilot Diploma — Online', 'AI Copilot Diploma-Online', projects) +
-      renderPanel('🟣 AI Copilot Diploma — Offline', 'AI Copilot Diploma-Offline', projects);
+      renderPanel('🟢 AI Copilot Diploma — Online', 'AI Copilot Diploma-Online', projects,
+        { locked: !onlineRevealed && !isAdmin, adminPreview: !onlineRevealed && isAdmin }) +
+      renderPanel('🟣 AI Copilot Diploma — Offline', 'AI Copilot Diploma-Offline', projects,
+        { locked: !offlineRevealed && !isAdmin, adminPreview: !offlineRevealed && isAdmin });
 
-    if (adminPreview) {
-      grid.insertAdjacentHTML('afterbegin',
-        '<div class="admin-preview-note" style="grid-column:1/-1;">👁 Admin preview — voters still see a locked screen. Flip “Reveal results publicly” under AI Copilot Diploma settings to unlock it for everyone.</div>');
-      FireworksDiploma.stop();   // fireworks are for the real reveal, not the admin's private peek
-    } else if (revealed) {
-      FireworksDiploma.start();  // no-ops if already running, or if reduced-motion
-    }
+    // Fireworks are for a genuine reveal, not an admin's private preview —
+    // fire as soon as either delivery mode is actually public.
+    if (onlineRevealed || offlineRevealed) FireworksDiploma.start();
+    else FireworksDiploma.stop();
   }
 
   renderDiplomaBoard();
@@ -3536,7 +3553,8 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
   const settingsSaveHint = document.getElementById('settingsSaveHint');
 
   const setVotingOpenDiploma = document.getElementById('setVotingOpenDiploma');
-  const setResultsRevealedDiploma = document.getElementById('setResultsRevealedDiploma');
+  const setRevealedOnlineDiploma = document.getElementById('setRevealedOnlineDiploma');
+  const setRevealedOfflineDiploma = document.getElementById('setRevealedOfflineDiploma');
   const setSelfVotingDiploma = document.getElementById('setSelfVotingDiploma');
   const setRulesNoteDiploma = document.getElementById('setRulesNoteDiploma');
   const saveSettingsBtnDiploma = document.getElementById('saveSettingsBtnDiploma');
@@ -3768,7 +3786,8 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
   function loadDiplomaSettingsForm() {
     const s = Store.getSettings('diploma');
     setVotingOpenDiploma.checked = s.votingOpen;
-    setResultsRevealedDiploma.checked = !!s.resultsRevealed;
+    setRevealedOnlineDiploma.checked = !!s.revealedOnline;
+    setRevealedOfflineDiploma.checked = !!s.revealedOffline;
     setSelfVotingDiploma.checked = s.selfVotingAllowed;
     setRulesNoteDiploma.value = s.rulesNote;
 
@@ -3791,7 +3810,11 @@ const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
     await Store.saveSettings({
       votingOpen: setVotingOpenDiploma.checked,
       requireViewAll: false,
-      resultsRevealed: setResultsRevealedDiploma.checked,
+      // Superseded by revealedOnline/revealedOffline below — kept unchanged
+      // rather than dropped, so the column doesn't silently null out.
+      resultsRevealed: Store.getSettings('diploma').resultsRevealed,
+      revealedOnline: setRevealedOnlineDiploma.checked,
+      revealedOffline: setRevealedOfflineDiploma.checked,
       selfVotingAllowed: setSelfVotingDiploma.checked,
       rulesNote: setRulesNoteDiploma.value.trim() || 'One vote for your favorite idea.',
       eventName: Store.getSettings('diploma').eventName,

@@ -154,7 +154,13 @@ create table if not exists public.settings (
   open_cohorts         jsonb not null default '[]'::jsonb,
   -- Diploma only: which course_name values are open (Online / Offline).
   -- Empty means both. Unused by the claude track (only one course).
-  open_courses         jsonb not null default '[]'::jsonb
+  open_courses         jsonb not null default '[]'::jsonb,
+  -- Diploma only: Online and Offline are revealed independently, since
+  -- the leaderboard ranks them separately. results_revealed above still
+  -- drives claude's single reveal switch; diploma ignores it in favor of
+  -- these two.
+  revealed_online       boolean not null default false,
+  revealed_offline      boolean not null default false
 );
 -- Upgrade path from the old single-row (id boolean) shape, if it's still
 -- around. No-op on an install that already has `track`.
@@ -173,6 +179,8 @@ begin
 end $$;
 alter table public.settings add column if not exists open_cohorts jsonb not null default '[]'::jsonb;
 alter table public.settings add column if not exists open_courses jsonb not null default '[]'::jsonb;
+alter table public.settings add column if not exists revealed_online boolean not null default false;
+alter table public.settings add column if not exists revealed_offline boolean not null default false;
 
 insert into public.settings (track) values ('claude') on conflict (track) do nothing;
 insert into public.settings (track, voting_open, rules_note, event_name)
@@ -383,10 +391,10 @@ language sql security definer stable
 set search_path = public
 as $$ select v.category, count(*)::bigint from public.votes v group by v.category $$;
 
--- Per-project standings — only once revealed, or for an admin. Revealed is
--- tracked per voting track: 'idea' rows gate on the diploma track's
--- results_revealed, everything else on claude's, so revealing one track
--- never leaks the other's standings.
+-- Per-project standings — only once revealed, or for an admin. Claude
+-- gates on one flag; Diploma's 'idea' rows gate per delivery mode by
+-- joining to the project's course_name, since Online and Offline are
+-- revealed independently on that leaderboard.
 create or replace function public.standings()
 returns table (project_id uuid, category text, votes bigint)
 language plpgsql security definer stable
@@ -394,7 +402,8 @@ set search_path = public
 as $$
 declare
   claude_revealed boolean;
-  diploma_revealed boolean;
+  diploma_online_revealed boolean;
+  diploma_offline_revealed boolean;
 begin
   if public.is_admin() then
     return query
@@ -404,13 +413,16 @@ begin
   end if;
 
   select results_revealed into claude_revealed from public.settings where track = 'claude';
-  select results_revealed into diploma_revealed from public.settings where track = 'diploma';
+  select revealed_online, revealed_offline into diploma_online_revealed, diploma_offline_revealed
+    from public.settings where track = 'diploma';
 
   return query
     select v.project_id, v.category, count(*)::bigint
     from public.votes v
-    where (v.category = 'idea' and coalesce(diploma_revealed, false))
-       or (v.category != 'idea' and coalesce(claude_revealed, false))
+    join public.projects p on p.id = v.project_id
+    where (v.category != 'idea' and coalesce(claude_revealed, false))
+       or (v.category = 'idea' and p.course_name = 'AI Copilot Diploma-Online' and coalesce(diploma_online_revealed, false))
+       or (v.category = 'idea' and p.course_name = 'AI Copilot Diploma-Offline' and coalesce(diploma_offline_revealed, false))
     group by v.project_id, v.category;
 end;
 $$;
