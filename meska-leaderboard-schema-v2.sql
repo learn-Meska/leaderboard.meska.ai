@@ -1,7 +1,9 @@
 -- ============================================================
 -- Meska AI — Final Project Leaderboard
--- Schema v2 — matches the current build (project HTML pages,
--- mobile capture, vote timestamps, reveal lock).
+-- Schema v2 — matches the current build: project HTML pages, mobile
+-- capture, vote timestamps, reveal lock, and two independent voting
+-- tracks (Claude Course / AI Copilot Diploma) each with their own
+-- open/closed, reveal, and course+cohort gating.
 -- Run once in Supabase → SQL Editor → New query → Run.
 -- Safe to re-run: everything is guarded.
 -- ============================================================
@@ -44,6 +46,64 @@ drop policy if exists "admins read all profiles" on public.profiles;
 create policy "admins read all profiles" on public.profiles
   for select using (public.is_admin());
 
+-- Emails that become admin automatically on signup. Admin-managed only.
+create table if not exists public.admin_emails (
+  email       text primary key,
+  created_at  timestamptz not null default now()
+);
+alter table public.admin_emails enable row level security;
+drop policy if exists "admins manage admin_emails" on public.admin_emails;
+create policy "admins manage admin_emails" on public.admin_emails
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- is_admin can never be set by the row's own owner — only derived from the
+-- allowlist on signup, or changed by an existing admin on update. Without
+-- this, the "create own profile" policy above would let anyone self-promote
+-- by POSTing is_admin: true on their own registration.
+create or replace function public.lock_admin_flag()
+returns trigger language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if TG_OP = 'INSERT' then
+    new.is_admin := exists (
+      select 1 from public.admin_emails a where lower(a.email) = lower(new.email)
+    );
+  else
+    if new.is_admin is distinct from old.is_admin and not public.is_admin() then
+      new.is_admin := old.is_admin;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists enforce_admin_flag on public.profiles;
+create trigger enforce_admin_flag
+  before insert or update on public.profiles
+  for each row execute function public.lock_admin_flag();
+
+-- Promote an already-registered email to admin from the Admin panel,
+-- instead of hand-written SQL. Re-checks the caller is already an admin —
+-- this is a convenience, not a new privilege boundary. lock_admin_flag()
+-- above still fires on the UPDATE underneath and allows the change through
+-- precisely because the caller passes that same is_admin() check.
+create or replace function public.promote_to_admin(target_email text)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_authorized';
+  end if;
+  update public.profiles set is_admin = true where lower(email) = lower(target_email);
+  if not found then
+    raise exception 'no_such_registered_user';
+  end if;
+end;
+$$;
+grant execute on function public.promote_to_admin(text) to authenticated;
+
 
 -- ---------- 2. COHORT LIST ----------
 -- One list, two powers: who may submit, and who may vote Cohort Choice.
@@ -75,22 +135,51 @@ as $$
 $$;
 
 
--- ---------- 3. SETTINGS (single row) ----------
+-- ---------- 3. SETTINGS (one row per voting track) ----------
+-- Two independent tracks — claude and diploma — so each can be opened,
+-- closed and revealed on its own schedule. Originally a single row
+-- (id boolean primary key default true); migrated to track-keyed so the
+-- Diploma page didn't have to share Claude's on/off switch.
 create table if not exists public.settings (
-  id                  boolean primary key default true,
-  voting_open         boolean not null default true,
-  require_view_all    boolean not null default false,
-  self_voting_allowed boolean not null default false,
-  results_revealed    boolean not null default false,
-  rules_note          text not null default 'One vote per person, per category. You can change your vote any time before voting closes.',
-  event_name          text not null default 'Claude Course for Professionals — Cohort Awards',
-  -- Which course cohorts are currently open to voters. Empty = no
-  -- restriction, every approved project is votable (today's behavior).
-  open_cohorts        jsonb not null default '[]'::jsonb,
-  constraint settings_single_row check (id)
+  track                text primary key check (track in ('claude','diploma')),
+  voting_open          boolean not null default true,
+  require_view_all     boolean not null default false,
+  self_voting_allowed  boolean not null default false,
+  results_revealed     boolean not null default false,
+  rules_note           text not null default 'One vote per person, per category. You can change your vote any time before voting closes.',
+  event_name           text not null default 'Claude Course for Professionals — Cohort Awards',
+  -- Which cohort tags are currently open to voters, e.g. "Wave 10". Empty
+  -- means no restriction on that axis — every matching approved project
+  -- is votable.
+  open_cohorts         jsonb not null default '[]'::jsonb,
+  -- Diploma only: which course_name values are open (Online / Offline).
+  -- Empty means both. Unused by the claude track (only one course).
+  open_courses         jsonb not null default '[]'::jsonb
 );
+-- Upgrade path from the old single-row (id boolean) shape, if it's still
+-- around. No-op on an install that already has `track`.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema='public' and table_name='settings' and column_name='id') then
+    alter table public.settings add column if not exists track text;
+    update public.settings set track = 'claude' where track is null;
+    alter table public.settings drop constraint if exists settings_single_row;
+    alter table public.settings drop constraint if exists settings_pkey;
+    alter table public.settings add constraint settings_track_check check (track in ('claude','diploma'));
+    alter table public.settings add primary key (track);
+    alter table public.settings drop column if exists id;
+  end if;
+end $$;
 alter table public.settings add column if not exists open_cohorts jsonb not null default '[]'::jsonb;
-insert into public.settings (id) values (true) on conflict (id) do nothing;
+alter table public.settings add column if not exists open_courses jsonb not null default '[]'::jsonb;
+
+insert into public.settings (track) values ('claude') on conflict (track) do nothing;
+insert into public.settings (track, voting_open, rules_note, event_name)
+values ('diploma', false,
+        'One vote for your favorite idea. You can change your vote any time before voting closes.',
+        'AI Copilot Diploma — Idea Voting')
+on conflict (track) do nothing;
 
 alter table public.settings enable row level security;
 
@@ -179,14 +268,19 @@ create policy "admins write projects" on public.projects
 
 -- ---------- 5. VOTES ----------
 -- The UNIQUE constraint IS the "one vote per person per category" rule.
+-- 'idea' is the Diploma page's single vote — the same UNIQUE constraint
+-- gives it "one idea vote per voter, changeable" for free.
 create table if not exists public.votes (
   id          uuid primary key default gen_random_uuid(),
-  category    text not null check (category in ('roi','technical','creative','cohort')),
+  category    text not null check (category in ('roi','technical','creative','cohort','idea')),
   project_id  uuid not null references public.projects(id) on delete cascade,
   voter_id    uuid not null references auth.users(id) on delete cascade,
   created_at  timestamptz not null default now(),
   unique (category, voter_id)
 );
+alter table public.votes drop constraint if exists votes_category_check;
+alter table public.votes add constraint votes_category_check
+  check (category in ('roi','technical','creative','cohort','idea'));
 alter table public.votes enable row level security;
 
 -- Nobody reads raw votes except their own — this is what keeps the
@@ -215,18 +309,43 @@ drop policy if exists "admins delete votes" on public.votes;
 create policy "admins delete votes" on public.votes
   for delete using (public.is_admin());
 
--- Cohort Choice is enforced here, not in the browser.
+-- Cohort Choice, voting-open, and course/cohort gating are all enforced
+-- here, not in the browser. 'idea' votes are checked against the diploma
+-- track's settings row; everything else against claude's. Variable names
+-- are prefixed v_ to avoid shadowing the settings columns of the same
+-- name — a real bug hit here once (ambiguous column reference).
 create or replace function public.check_vote_rules()
 returns trigger language plpgsql security definer
 set search_path = public
 as $$
 declare
   voter_email text;
-  is_open boolean;
+  v_is_open boolean;
+  v_trk text;
+  proj_course text;
+  proj_tag text;
+  v_open_courses jsonb;
+  v_open_cohorts jsonb;
 begin
-  select voting_open into is_open from public.settings where id = true;
-  if not coalesce(is_open, false) then
+  v_trk := case when new.category = 'idea' then 'diploma' else 'claude' end;
+
+  select voting_open, open_courses, open_cohorts into v_is_open, v_open_courses, v_open_cohorts
+    from public.settings where track = v_trk;
+
+  if not coalesce(v_is_open, false) then
     raise exception 'voting_closed';
+  end if;
+
+  select course_name, cohort_tag into proj_course, proj_tag
+    from public.projects where id = new.project_id;
+
+  if jsonb_array_length(coalesce(v_open_courses,'[]'::jsonb)) > 0
+     and not (v_open_courses ? coalesce(proj_course,'')) then
+    raise exception 'course_not_open';
+  end if;
+  if jsonb_array_length(coalesce(v_open_cohorts,'[]'::jsonb)) > 0
+     and not (v_open_cohorts ? coalesce(proj_tag,'')) then
+    raise exception 'cohort_not_open';
   end if;
 
   if new.category = 'cohort' then
@@ -253,20 +372,35 @@ language sql security definer stable
 set search_path = public
 as $$ select v.category, count(*)::bigint from public.votes v group by v.category $$;
 
--- Per-project standings — only once revealed, or for an admin.
+-- Per-project standings — only once revealed, or for an admin. Revealed is
+-- tracked per voting track: 'idea' rows gate on the diploma track's
+-- results_revealed, everything else on claude's, so revealing one track
+-- never leaks the other's standings.
 create or replace function public.standings()
 returns table (project_id uuid, category text, votes bigint)
 language plpgsql security definer stable
 set search_path = public
 as $$
+declare
+  claude_revealed boolean;
+  diploma_revealed boolean;
 begin
-  if not (coalesce((select results_revealed from public.settings where id = true), false)
-          or public.is_admin()) then
-    raise exception 'results_not_revealed';
+  if public.is_admin() then
+    return query
+      select v.project_id, v.category, count(*)::bigint
+      from public.votes v group by v.project_id, v.category;
+    return;
   end if;
+
+  select results_revealed into claude_revealed from public.settings where track = 'claude';
+  select results_revealed into diploma_revealed from public.settings where track = 'diploma';
+
   return query
     select v.project_id, v.category, count(*)::bigint
-    from public.votes v group by v.project_id, v.category;
+    from public.votes v
+    where (v.category = 'idea' and coalesce(diploma_revealed, false))
+       or (v.category != 'idea' and coalesce(claude_revealed, false))
+    group by v.project_id, v.category;
 end;
 $$;
 
@@ -287,8 +421,13 @@ end $$;
 
 -- ============================================================
 -- AFTER RUNNING THIS
---   1. Register through the site with your own email.
---   2. Come back here and run, with your address:
---        update public.profiles set is_admin = true where email = 'you@meska.ai';
---   3. That account now unlocks the Admin tab.
+--   1. Pre-authorize your own admin email, before registering:
+--        insert into public.admin_emails (email) values ('you@meska.ai');
+--   2. Register through the site with that email — you'll land as an
+--      admin automatically (lock_admin_flag() derives it from the table
+--      above on signup).
+--   3. From then on, promote further admins from the Admin panel's
+--      "Admin access" button rather than hand SQL — it calls
+--      promote_to_admin(), which only works for someone who's already
+--      an admin. It requires the target to have registered first.
 -- ============================================================
