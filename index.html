@@ -860,6 +860,12 @@ h1, h2, h3, h4 {
         </div>
       </div>
 
+      <div id="voteLocked" class="locked-panel" style="display:none; max-width:520px; margin:0 auto;">
+        <h3>Log in to see the projects</h3>
+        <p>Register or log in first — project details stay hidden until then.</p>
+        <div style="margin-top:16px;"><button class="btn btn-primary btn-sm" id="voteLoginBtn">Register / Log in</button></div>
+      </div>
+
       <div id="gridWrap">
         <div class="section-head">
           <h2>The Four Awards</h2>
@@ -920,6 +926,12 @@ h1, h2, h3, h4 {
     </section>
 
     <section class="section">
+      <div id="diplomaVoteLocked" class="locked-panel" style="display:none; max-width:520px; margin:0 auto;">
+        <h3>Log in to see the ideas</h3>
+        <p>Register or log in first — idea details stay hidden until then.</p>
+        <div style="margin-top:16px;"><button class="btn btn-primary btn-sm" id="diplomaVoteLoginBtn">Register / Log in</button></div>
+      </div>
+
       <div id="diplomaGridWrap">
         <div class="section-head">
           <h2>The Ideas</h2>
@@ -2829,6 +2841,7 @@ const Auth = (() => {
   const grid = document.getElementById('projectGrid');
   const gridWrap = document.getElementById('gridWrap');
   const detailWrap = document.getElementById('detailWrap');
+  const voteLocked = document.getElementById('voteLocked');
   const detailContent = document.getElementById('detailContent');
   const backToGrid = document.getElementById('backToGrid');
   const emptyState = document.getElementById('emptyState');
@@ -2919,7 +2932,26 @@ const Auth = (() => {
     refreshVoteButtons();
   }
 
+  // Nobody sees a project's content — grid or detail — until logged in.
+  function applyLockState() {
+    const locked = !Store.isLoggedIn();
+    voteLocked.style.display = locked ? 'block' : 'none';
+    if (locked) {
+      gridWrap.style.display = 'none'; detailWrap.style.display = 'none';
+    } else {
+      // Restore whichever pane belongs on screen — callers that are about
+      // to show a specific pane (showGrid/showDetail) still set this
+      // explicitly themselves right after; this is what fixes the case
+      // where a Store change (e.g. logging in) unlocks the page without
+      // going through either of those.
+      gridWrap.style.display = openProjectId ? 'none' : 'block';
+      detailWrap.style.display = openProjectId ? 'block' : 'none';
+    }
+    return locked;
+  }
+
   function showDetail(id) {
+    if (applyLockState()) return;
     const project = Store.getApprovedProjects().find(p => p.id === id);
     if (!project) return;
     openProjectId = id;
@@ -2932,6 +2964,7 @@ const Auth = (() => {
   }
   function showGrid() {
     openProjectId = null;
+    if (applyLockState()) return;
     detailWrap.style.display = 'none';
     gridWrap.style.display = 'block';
     renderGrid();
@@ -2992,11 +3025,15 @@ const Auth = (() => {
     refreshEligibility();
     renderCounter(); renderTally();
     updateProgress();
+    if (applyLockState()) return;
     if (openProjectId) refreshVoteButtons(); else renderGrid();
   }
 
   // keep the "voted n/4" chips honest without rebuilding the iframes
-  Store.subscribe(() => { if (!openProjectId) refreshVoteButtons(); });
+  Store.subscribe(() => { if (!openProjectId && Store.isLoggedIn()) refreshVoteButtons(); });
+
+  const voteLoginBtn = document.getElementById('voteLoginBtn');
+  if (voteLoginBtn) voteLoginBtn.addEventListener('click', () => Auth.openModal({ tab: 'register' }));
 
   showGrid();
   refreshStatusChip(); applyRulesNote(); refreshEligibility(); renderCounter(); renderTally(); updateProgress();
@@ -3011,6 +3048,7 @@ const Auth = (() => {
   const grid = document.getElementById('diplomaProjectGrid');
   const gridWrap = document.getElementById('diplomaGridWrap');
   const detailWrap = document.getElementById('diplomaDetailWrap');
+  const voteLocked = document.getElementById('diplomaVoteLocked');
   const detailContent = document.getElementById('diplomaDetailContent');
   const backToGrid = document.getElementById('diplomaBackToGrid');
   const emptyState = document.getElementById('diplomaEmptyState');
@@ -3091,7 +3129,26 @@ const Auth = (() => {
     refreshVoteButtons();
   }
 
+  // Nobody sees an idea's content — grid or detail — until logged in.
+  function applyLockState() {
+    const locked = !Store.isLoggedIn();
+    voteLocked.style.display = locked ? 'block' : 'none';
+    if (locked) {
+      gridWrap.style.display = 'none'; detailWrap.style.display = 'none';
+    } else {
+      // Restore whichever pane belongs on screen — callers that are about
+      // to show a specific pane (showGrid/showDetail) still set this
+      // explicitly themselves right after; this is what fixes the case
+      // where a Store change (e.g. logging in) unlocks the page without
+      // going through either of those.
+      gridWrap.style.display = openProjectId ? 'none' : 'block';
+      detailWrap.style.display = openProjectId ? 'block' : 'none';
+    }
+    return locked;
+  }
+
   function showDetail(id) {
+    if (applyLockState()) return;
     const project = votablePool().find(p => p.id === id);
     if (!project) return;
     openProjectId = id;
@@ -3103,6 +3160,7 @@ const Auth = (() => {
   }
   function showGrid() {
     openProjectId = null;
+    if (applyLockState()) return;
     detailWrap.style.display = 'none';
     gridWrap.style.display = 'block';
     renderGrid();
@@ -3151,10 +3209,14 @@ const Auth = (() => {
 
   function onStoreChange() {
     renderCounter();
+    if (applyLockState()) return;
     if (openProjectId) refreshVoteButtons(); else renderGrid();
   }
 
-  Store.subscribe(() => { if (!openProjectId) refreshVoteButtons(); });
+  Store.subscribe(() => { if (!openProjectId && Store.isLoggedIn()) refreshVoteButtons(); });
+
+  const diplomaVoteLoginBtn = document.getElementById('diplomaVoteLoginBtn');
+  if (diplomaVoteLoginBtn) diplomaVoteLoginBtn.addEventListener('click', () => Auth.openModal({ tab: 'register' }));
 
   showGrid();
   applyRulesNote(); renderCounter();
