@@ -342,7 +342,7 @@ h1, h2, h3, h4 {
 .board-winners.revealing { visibility: hidden; }
 .replay-btn { margin-top: 22px; }
 
-#fireworksCanvas {
+#fireworksCanvas, #fireworksCanvasDiploma {
   position: fixed; inset: 0; width: 100vw; height: 100vh;
   pointer-events: none; z-index: 0;
 }
@@ -996,6 +996,7 @@ h1, h2, h3, h4 {
 <!-- ================= AI COPILOT DIPLOMA LEADERBOARD VIEW ================= -->
 <section class="view" id="view-board-diploma">
   <div class="board-body-bg">
+    <canvas id="fireworksCanvasDiploma"></canvas>
     <main class="board-main">
       <div class="board-head">
         <div class="kicker"><span class="dot"></span> Live Results · Idea Rankings</div>
@@ -3138,8 +3139,11 @@ const Auth = (() => {
 
 
 /* ---------- Fireworks (canvas, no libraries) ---------- */
-const Fireworks = (() => {
-  const canvas = document.getElementById('fireworksCanvas');
+/* Factory so each leaderboard (Claude, Diploma) gets its own canvas and
+   animation state — a shared instance would go dark on whichever view
+   isn't the active one, since inactive .view elements are display:none. */
+function createFireworks(canvasId) {
+  const canvas = document.getElementById(canvasId);
   if (!canvas) return { start(){}, stop(){} };
   const ctx = canvas.getContext('2d');
   const COLORS = ['#2563EB', '#60A5FA', '#93C5FD', '#FBBF24', '#FDE68A', '#FFFFFF'];
@@ -3222,7 +3226,9 @@ const Fireworks = (() => {
   }
   window.addEventListener('resize', () => { if (running) resize(); });
   return { start, stop };
-})();
+}
+const Fireworks = createFireworks('fireworksCanvas');
+const FireworksDiploma = createFireworks('fireworksCanvasDiploma');
 
 /* ============================================================
    LEADERBOARD module
@@ -3470,7 +3476,7 @@ const Fireworks = (() => {
     totalVotesStat.textContent = Store.totalVotesCast([Store.IDEA_CATEGORY]);
     lastUpdated.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    if (!projects.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+    if (!projects.length) { grid.innerHTML = ''; empty.style.display = 'block'; FireworksDiploma.stop(); return; }
     empty.style.display = 'none';
 
     const settings = Store.getSettings('diploma');
@@ -3484,6 +3490,7 @@ const Fireworks = (() => {
           <div class="lock-sub">Idea rankings stay hidden until an organizer reveals them.</div>
           <div class="lock-hint">Organizers: log in as an admin and flip <b>Reveal results publicly</b> under AI Copilot Diploma settings.</div>
         </div>`;
+      FireworksDiploma.stop();
       return;
     }
 
@@ -3494,12 +3501,15 @@ const Fireworks = (() => {
     if (adminPreview) {
       grid.insertAdjacentHTML('afterbegin',
         '<div class="admin-preview-note" style="grid-column:1/-1;">👁 Admin preview — voters still see a locked screen. Flip “Reveal results publicly” under AI Copilot Diploma settings to unlock it for everyone.</div>');
+      FireworksDiploma.stop();   // fireworks are for the real reveal, not the admin's private peek
+    } else if (revealed) {
+      FireworksDiploma.start();  // no-ops if already running, or if reduced-motion
     }
   }
 
   renderDiplomaBoard();
   Store.subscribe(renderDiplomaBoard);
-  onViewChange((name) => { if (name === 'board-diploma') renderDiplomaBoard(); });
+  onViewChange((name) => { if (name === 'board-diploma') renderDiplomaBoard(); else FireworksDiploma.stop(); });
   setInterval(renderDiplomaBoard, 4000);
 })();
 
