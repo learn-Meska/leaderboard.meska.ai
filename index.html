@@ -860,12 +860,6 @@ h1, h2, h3, h4 {
         </div>
       </div>
 
-      <div id="voteLocked" class="locked-panel" style="display:none; max-width:520px; margin:0 auto;">
-        <h3>Log in to see the projects</h3>
-        <p>Register or log in first — project details stay hidden until then.</p>
-        <div style="margin-top:16px;"><button class="btn btn-primary btn-sm" id="voteLoginBtn">Register / Log in</button></div>
-      </div>
-
       <div id="gridWrap">
         <div class="section-head">
           <h2>The Four Awards</h2>
@@ -941,12 +935,6 @@ h1, h2, h3, h4 {
     </section>
 
     <section class="section" style="padding-top:0;">
-      <div id="diplomaVoteLocked" class="locked-panel" style="display:none; max-width:520px; margin:0 auto;">
-        <h3>Log in to see the ideas</h3>
-        <p>Register or log in first — idea details stay hidden until then.</p>
-        <div style="margin-top:16px;"><button class="btn btn-primary btn-sm" id="diplomaVoteLoginBtn">Register / Log in</button></div>
-      </div>
-
       <div id="diplomaGridWrap">
         <div class="section-head">
           <h2>The Ideas</h2>
@@ -2359,6 +2347,7 @@ const ProjectViewer = (() => {
     const t = e.target.closest('[data-open]');
     if (!t) return;
     e.preventDefault(); e.stopPropagation();
+    if (!Store.isLoggedIn()) { Auth.openModal({ tab: 'register' }); return; }
     open(t.dataset.open);
   });
   return { open, close };
@@ -2439,8 +2428,28 @@ function renderProjectPreview(project) {
   </div>`;
 }
 
-function renderTile(project, votedCount) {
+// Logged-out visitors get the preview only — no name, tagline, participant,
+// or vote row. Every click on the tile (including the preview's own "Open
+// project" button) is redirected to the register/login modal instead.
+function lockedTileBody() {
+  return `
+    <div class="ptile-body">
+      <div style="text-align:center; padding:8px 0 2px; color:var(--muted); font-size:12.5px;">🔒 Log in or register to see this project</div>
+    </div>
+    <div class="tile-vote" style="text-align:center;">
+      <button type="button" class="btn btn-primary btn-sm" style="width:100%;">Register / Log in</button>
+    </div>`;
+}
+
+function renderTile(project, votedCount, loggedIn = true) {
   const p = project;
+  if (!loggedIn) {
+    return `
+    <article class="ptile" data-project-id="${p.id}" data-locked="1" tabindex="0" role="button" aria-label="Log in to see this project">
+      ${renderProjectPreview(p)}
+      ${lockedTileBody()}
+    </article>`;
+  }
   return `
   <article class="ptile" data-project-id="${p.id}" tabindex="0" role="button" aria-label="Open ${escapeHtml(p.name)}">
     ${renderProjectPreview(p)}
@@ -2868,7 +2877,6 @@ const Auth = (() => {
   const grid = document.getElementById('projectGrid');
   const gridWrap = document.getElementById('gridWrap');
   const detailWrap = document.getElementById('detailWrap');
-  const voteLocked = document.getElementById('voteLocked');
   const detailContent = document.getElementById('detailContent');
   const backToGrid = document.getElementById('backToGrid');
   const emptyState = document.getElementById('emptyState');
@@ -2940,45 +2948,32 @@ const Auth = (() => {
   window.addEventListener('resize', scalePreviews);
 
   function renderGrid() {
+    const loggedIn = Store.isLoggedIn();
     orderedProjects = orderProjects(Store.getVotableProjects());
     if (!orderedProjects.length) { grid.innerHTML = ''; emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
-    grid.innerHTML = orderedProjects.map(p => renderTile(p, votedCountFor(p.id))).join('');
+    grid.innerHTML = orderedProjects.map(p => renderTile(p, votedCountFor(p.id), loggedIn)).join('');
     scalePreviews();
     requestAnimationFrame(scalePreviews);   // re-measure once layout settles
 
     grid.querySelectorAll('.ptile').forEach(tile => {
       const open = () => showDetail(tile.dataset.projectId);
       tile.addEventListener('click', (e) => {
+        if (!Store.isLoggedIn()) { e.preventDefault(); Auth.openModal({ tab: 'register' }); return; }
         if (e.target.closest('.tile-vote')) return;   // voting must not navigate
         if (e.target.closest('[data-open]')) return;  // preview opens the project itself
         open();
       });
       tile.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
-    refreshVoteButtons();
+    if (loggedIn) refreshVoteButtons();
   }
 
-  // Nobody sees a project's content — grid or detail — until logged in.
-  function applyLockState() {
-    const locked = !Store.isLoggedIn();
-    voteLocked.style.display = locked ? 'block' : 'none';
-    if (locked) {
-      gridWrap.style.display = 'none'; detailWrap.style.display = 'none';
-    } else {
-      // Restore whichever pane belongs on screen — callers that are about
-      // to show a specific pane (showGrid/showDetail) still set this
-      // explicitly themselves right after; this is what fixes the case
-      // where a Store change (e.g. logging in) unlocks the page without
-      // going through either of those.
-      gridWrap.style.display = openProjectId ? 'none' : 'block';
-      detailWrap.style.display = openProjectId ? 'block' : 'none';
-    }
-    return locked;
-  }
-
+  // Defense in depth — renderGrid()'s tiles already redirect logged-out
+  // clicks to the register modal, but showDetail can also be reached via
+  // history navigation, so it re-checks independently.
   function showDetail(id) {
-    if (applyLockState()) return;
+    if (!Store.isLoggedIn()) { Auth.openModal({ tab: 'register' }); return; }
     const project = Store.getApprovedProjects().find(p => p.id === id);
     if (!project) return;
     openProjectId = id;
@@ -2991,7 +2986,6 @@ const Auth = (() => {
   }
   function showGrid() {
     openProjectId = null;
-    if (applyLockState()) return;
     detailWrap.style.display = 'none';
     gridWrap.style.display = 'block';
     renderGrid();
@@ -3052,15 +3046,14 @@ const Auth = (() => {
     refreshEligibility();
     renderCounter(); renderTally();
     updateProgress();
-    if (applyLockState()) return;
+    // Logging out while a detail page is open must not leave project
+    // content on screen — send them back to the (now locked) grid.
+    if (openProjectId && !Store.isLoggedIn()) { showGrid(); return; }
     if (openProjectId) refreshVoteButtons(); else renderGrid();
   }
 
   // keep the "voted n/4" chips honest without rebuilding the iframes
   Store.subscribe(() => { if (!openProjectId && Store.isLoggedIn()) refreshVoteButtons(); });
-
-  const voteLoginBtn = document.getElementById('voteLoginBtn');
-  if (voteLoginBtn) voteLoginBtn.addEventListener('click', () => Auth.openModal({ tab: 'register' }));
 
   showGrid();
   refreshStatusChip(); applyRulesNote(); refreshEligibility(); renderCounter(); renderTally(); updateProgress();
@@ -3075,7 +3068,6 @@ const Auth = (() => {
   const grid = document.getElementById('diplomaProjectGrid');
   const gridWrap = document.getElementById('diplomaGridWrap');
   const detailWrap = document.getElementById('diplomaDetailWrap');
-  const voteLocked = document.getElementById('diplomaVoteLocked');
   const detailContent = document.getElementById('diplomaDetailContent');
   const backToGrid = document.getElementById('diplomaBackToGrid');
   const emptyState = document.getElementById('diplomaEmptyState');
@@ -3123,8 +3115,15 @@ const Auth = (() => {
     if (!openProjectId) renderGrid(); else refreshVoteButtons();
   });
 
-  function renderDiplomaTile(project, voted) {
+  function renderDiplomaTile(project, voted, loggedIn = true) {
     const p = project;
+    if (!loggedIn) {
+      return `
+      <article class="ptile" data-project-id="${p.id}" data-locked="1" tabindex="0" role="button" aria-label="Log in to see this idea">
+        ${renderProjectPreview(p)}
+        ${lockedTileBody()}
+      </article>`;
+    }
     return `
     <article class="ptile" data-project-id="${p.id}" tabindex="0" role="button" aria-label="Open ${escapeHtml(p.name)}">
       ${renderProjectPreview(p)}
@@ -3145,46 +3144,33 @@ const Auth = (() => {
   }
 
   function renderGrid() {
+    const loggedIn = Store.isLoggedIn();
     refreshCohortFilterOptions();
     let pool = votablePool();
     if (filterTag) pool = pool.filter(p => p.cohortTag === filterTag);
     const ordered = orderProjects(pool);
     if (!ordered.length) { grid.innerHTML = ''; emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
-    grid.innerHTML = ordered.map(p => renderDiplomaTile(p, Store.hasIdeaVote(p.id))).join('');
+    grid.innerHTML = ordered.map(p => renderDiplomaTile(p, Store.hasIdeaVote(p.id), loggedIn)).join('');
 
     grid.querySelectorAll('.ptile').forEach(tile => {
       const open = () => showDetail(tile.dataset.projectId);
       tile.addEventListener('click', (e) => {
+        if (!Store.isLoggedIn()) { e.preventDefault(); Auth.openModal({ tab: 'register' }); return; }
         if (e.target.closest('.tile-vote')) return;
         if (e.target.closest('[data-open]')) return;
         open();
       });
       tile.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
-    refreshVoteButtons();
+    if (loggedIn) refreshVoteButtons();
   }
 
-  // Nobody sees an idea's content — grid or detail — until logged in.
-  function applyLockState() {
-    const locked = !Store.isLoggedIn();
-    voteLocked.style.display = locked ? 'block' : 'none';
-    if (locked) {
-      gridWrap.style.display = 'none'; detailWrap.style.display = 'none';
-    } else {
-      // Restore whichever pane belongs on screen — callers that are about
-      // to show a specific pane (showGrid/showDetail) still set this
-      // explicitly themselves right after; this is what fixes the case
-      // where a Store change (e.g. logging in) unlocks the page without
-      // going through either of those.
-      gridWrap.style.display = openProjectId ? 'none' : 'block';
-      detailWrap.style.display = openProjectId ? 'block' : 'none';
-    }
-    return locked;
-  }
-
+  // Defense in depth — renderGrid()'s tiles already redirect logged-out
+  // clicks to the register modal, but showDetail can also be reached via
+  // history navigation, so it re-checks independently.
   function showDetail(id) {
-    if (applyLockState()) return;
+    if (!Store.isLoggedIn()) { Auth.openModal({ tab: 'register' }); return; }
     const project = votablePool().find(p => p.id === id);
     if (!project) return;
     openProjectId = id;
@@ -3196,7 +3182,6 @@ const Auth = (() => {
   }
   function showGrid() {
     openProjectId = null;
-    if (applyLockState()) return;
     detailWrap.style.display = 'none';
     gridWrap.style.display = 'block';
     renderGrid();
@@ -3245,14 +3230,13 @@ const Auth = (() => {
 
   function onStoreChange() {
     renderCounter();
-    if (applyLockState()) return;
+    // Logging out while a detail page is open must not leave idea content
+    // on screen — send them back to the (now locked) grid.
+    if (openProjectId && !Store.isLoggedIn()) { showGrid(); return; }
     if (openProjectId) refreshVoteButtons(); else renderGrid();
   }
 
   Store.subscribe(() => { if (!openProjectId && Store.isLoggedIn()) refreshVoteButtons(); });
-
-  const diplomaVoteLoginBtn = document.getElementById('diplomaVoteLoginBtn');
-  if (diplomaVoteLoginBtn) diplomaVoteLoginBtn.addEventListener('click', () => Auth.openModal({ tab: 'register' }));
 
   showGrid();
   applyRulesNote(); renderCounter();
