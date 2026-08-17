@@ -391,6 +391,21 @@ language sql security definer stable
 set search_path = public
 as $$ select v.category, count(*)::bigint from public.votes v group by v.category $$;
 
+-- Same idea as vote_totals(), but for the Diploma voter dashboard —
+-- 'idea' votes grouped by delivery mode instead of by category. Still
+-- never per-project.
+create or replace function public.diploma_totals()
+returns table (course_name text, votes bigint)
+language sql security definer stable
+set search_path = public
+as $$
+  select p.course_name, count(*)::bigint
+  from public.votes v
+  join public.projects p on p.id = v.project_id
+  where v.category = 'idea'
+  group by p.course_name
+$$;
+
 -- Per-project standings — only once revealed, or for an admin. Claude
 -- gates on one flag; Diploma's 'idea' rows gate per delivery mode by
 -- joining to the project's course_name, since Online and Offline are
@@ -428,6 +443,7 @@ end;
 $$;
 
 grant execute on function public.vote_totals()  to anon, authenticated;
+grant execute on function public.diploma_totals() to anon, authenticated;
 grant execute on function public.standings()    to anon, authenticated;
 grant execute on function public.is_on_roster(text) to authenticated;
 grant execute on function public.i_am_cohort()  to authenticated;

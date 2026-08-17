@@ -914,18 +914,33 @@ h1, h2, h3, h4 {
   <main class="container">
     <section style="margin-top:-26px; position:relative; z-index:2;">
       <div class="rules-strip">
-        <span class="vote-counter">🗳️ <b id="diplomaVoteCount">0</b> votes cast so far</span>
         <span id="diplomaRulesNoteText"><b>Rule:</b> vote for as many ideas as you'd like to support, one vote per idea. Toggle any time before voting closes.</span>
-        <div class="field" style="margin-left:auto; min-width:220px;">
-          <div style="font-size:11px; font-weight:600; color:var(--muted); margin-bottom:3px;">Select your cohort to vote 👇</div>
-          <select id="diplomaCohortFilter" class="text-input" style="font-size:13px; padding:7px 10px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+          <label for="diplomaCohortFilter" style="font-size:12px; font-weight:600; color:var(--muted); white-space:nowrap;">Select your cohort to vote 👇</label>
+          <select id="diplomaCohortFilter" class="text-input" style="font-size:13px; padding:7px 10px; width:200px;">
             <option value="">— Select your cohort to vote —</option>
           </select>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" style="padding-top:0;">
+      <div class="tally-box" id="diplomaTallyBox">
+        <div class="tally-total">
+          <div class="n" id="diplomaTallyTotal">0</div>
+          <div class="l">Votes cast so far</div>
+        </div>
+        <div class="tally-grid" id="diplomaTallyGrid" style="grid-template-columns:repeat(2,1fr);">
+          <div class="tally-cell"><div class="c-n" id="diplomaTallyOnline">0</div><div class="c-l">🟢 AI Copilot Diploma — Online</div></div>
+          <div class="tally-cell"><div class="c-n" id="diplomaTallyOffline">0</div><div class="c-l">🟣 AI Copilot Diploma — Offline</div></div>
+        </div>
+        <div class="tally-note">
+          🔒 These are totals per delivery mode only — <b>which idea is ahead stays hidden</b> until an organizer reveals it.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0;">
       <div id="diplomaVoteLocked" class="locked-panel" style="display:none; max-width:520px; margin:0 auto;">
         <h3>Log in to see the ideas</h3>
         <p>Register or log in first — idea details stay hidden until then.</p>
@@ -1766,6 +1781,7 @@ const Store = (() => {
   let _myVotes = {};               // { category: projectId } — exclusive categories only
   let _myIdeaVotes = new Set();    // project ids — 'idea' is multi-select
   let _totals = {};                // { category: count }
+  let _diplomaTotals = {};         // { courseName: count } — 'idea' votes by delivery mode
   let _standings = {};             // { projectId: { category: count } } — post-reveal / admin
   let _allVotes = [];              // admin only, for the reports
   let _lastError = null;
@@ -1844,6 +1860,12 @@ const Store = (() => {
     const t = {}; (data || []).forEach(r => { t[r.category] = Number(r.votes); });
     _totals = t;
   }
+  async function loadDiplomaTotals() {
+    const { data, error } = await sb.rpc('diploma_totals');
+    if (error) return;
+    const t = {}; (data || []).forEach(r => { t[r.course_name] = Number(r.votes); });
+    _diplomaTotals = t;
+  }
   // Refuses with results_not_revealed unless revealed or admin — that is the
   // point, so an error here is normal and simply leaves standings empty.
   async function loadStandings() {
@@ -1882,7 +1904,7 @@ const Store = (() => {
   async function refreshAll() {
     // profile first: isAdmin() gates what loadAdminData() may fetch
     await loadProfile();
-    await Promise.all([loadProjects(), loadSettings(), loadTotals()]);
+    await Promise.all([loadProjects(), loadSettings(), loadTotals(), loadDiplomaTotals()]);
     await Promise.all([loadMyVotes(), loadStandings(), loadCohortFlag()]);
     await loadAdminData();
     notify();
@@ -1969,6 +1991,11 @@ const Store = (() => {
     const o = {}; cats.forEach(c => { o[c.id] = _totals[c.id] || 0; }); return o;
   };
   const totalVotesCast = (cats = CATEGORIES) => cats.reduce((n, c) => n + (_totals[c.id] || 0), 0);
+  // Voter-facing dashboard: totals by delivery mode, never per-project.
+  const diplomaTotalsByCourse = () => ({
+    online: _diplomaTotals['AI Copilot Diploma-Online'] || 0,
+    offline: _diplomaTotals['AI Copilot Diploma-Offline'] || 0,
+  });
   const distinctVoters = () => new Set(_allVotes.map(v => v.voter_id)).size;
   const getVotes = () => {
     const o = {};
@@ -2021,7 +2048,7 @@ const Store = (() => {
       }
     }
 
-    await Promise.all([loadMyVotes(), loadTotals(), loadStandings()]);
+    await Promise.all([loadMyVotes(), loadTotals(), loadDiplomaTotals(), loadStandings()]);
     if (isAdmin()) await loadAdminData();
     notify();
   }
@@ -2186,7 +2213,7 @@ const Store = (() => {
     getProjects, getApprovedProjects, getVotableProjects, getPendingProjects, myProjects,
     addProject, updateProject, removeProject, setProjectStatus, rejectProject, submitProject,
     getVotes, getVoteLog, votesPerDay, myVoteFor, hasIdeaVote, myIdeaVotes, castVote, tally,
-    countsPerCategory, totalVotesCast, distinctVoters, resetVotes,
+    countsPerCategory, totalVotesCast, diplomaTotalsByCourse, distinctVoters, resetVotes,
     getSettings, saveSettings,
     getRoster, saveRoster, removeFromRoster, canVoteCohort, canSubmit,
     getUsers, currentUser, isLoggedIn, isAdmin, register, login, logout, promoteToAdmin,
@@ -3052,7 +3079,9 @@ const Auth = (() => {
   const detailContent = document.getElementById('diplomaDetailContent');
   const backToGrid = document.getElementById('diplomaBackToGrid');
   const emptyState = document.getElementById('diplomaEmptyState');
-  const voteCountEl = document.getElementById('diplomaVoteCount');
+  const tallyTotalEl = document.getElementById('diplomaTallyTotal');
+  const tallyOnlineEl = document.getElementById('diplomaTallyOnline');
+  const tallyOfflineEl = document.getElementById('diplomaTallyOffline');
   const rulesNoteText = document.getElementById('diplomaRulesNoteText');
   const cohortFilter = document.getElementById('diplomaCohortFilter');
 
@@ -3063,7 +3092,14 @@ const Auth = (() => {
     rulesNoteText.innerHTML = `<b>Rule:</b> ${escapeHtml(Store.getSettings(TRACK).rulesNote)}`;
   }
 
-  function renderCounter() { voteCountEl.textContent = Store.totalVotesCast([Store.IDEA_CATEGORY]); }
+  // Voter-facing dashboard — totals only, never per-idea, matching the
+  // same "hidden until reveal" standings model used everywhere else.
+  function renderCounter() {
+    tallyTotalEl.textContent = Store.totalVotesCast([Store.IDEA_CATEGORY]);
+    const byCourse = Store.diplomaTotalsByCourse();
+    tallyOnlineEl.textContent = byCourse.online;
+    tallyOfflineEl.textContent = byCourse.offline;
+  }
 
   function votablePool() { return Store.getVotableProjects(TRACK); }
 
